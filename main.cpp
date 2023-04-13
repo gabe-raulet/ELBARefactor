@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <cstdint>
 #include <cassert>
 #include <mpi.h>
@@ -29,14 +30,17 @@ int main(int argc, char *argv[])
 
         Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
 
+        std::ostringstream ss;
+        ss << "kmers.rank" << commgrid->GetRank() << ".txt";
 
-        for (int i = 0; i < commgrid->GetSize(); ++i)
+        std::ofstream filestream(ss.str());
+
+        for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
         {
-            if (i == commgrid->GetRank())
-                std::cerr << "Process " << i << " will store " << mykmers.size() << " k-mers" << std::endl;
-
-            MPI_Barrier(MPI_COMM_WORLD);
+            filestream << itr->GetString() << std::endl;
         }
+
+        filestream.close();
     }
 
 
