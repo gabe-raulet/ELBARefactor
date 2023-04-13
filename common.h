@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <set>
 #include <memory>
 #include <cstdint>
 
@@ -14,6 +15,9 @@ using Vector = std::vector<T>;
 
 template <class K, class V>
 using Map = std::unordered_map<K, V>;
+
+template <class T>
+using Set = std::set<T>;
 
 using String = std::string;
 

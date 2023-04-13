@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
         index.PrintInfo();
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
+
+        // Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
     }
 
 
