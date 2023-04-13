@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include "common.h"
 #include "Kmer.h"
+#include "KmerOps.h"
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
-        // Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
+        Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
     }
 
 

@@ -7,7 +7,7 @@ FLAGS=-O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC)
 
 all: main
 
-main: main.o CommGrid.o HashFuncs.o FastaIndex.o
+main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerOps.o
 	$(COMPILER) -o $@ $^ $(ALL_FLAGS) -lz
 
 main.o: main.cpp CommGrid.h Kmer.cpp Kmer.h
@@ -19,8 +19,10 @@ CommGrid.o: CommGrid.cpp CommGrid.h
 FastaIndex.o: FastaIndex.cpp FastaIndex.h CommGrid.h
 	$(COMPILER) $(FLAGS) -c -o $@ $<
 
-
 HashFuncs.o: HashFuncs.cpp HashFuncs.h
+	$(COMPILER) $(FLAGS) -c -o $@ $<
+
+KmerOps.o: KmerOps.cpp KmerOps.h
 	$(COMPILER) $(FLAGS) -c -o $@ $<
 
 clean:
