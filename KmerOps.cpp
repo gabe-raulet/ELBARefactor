@@ -6,15 +6,16 @@
 
 constexpr int64_t cardinality = 10000;
 
+buffer_t *scratch1 = NULL;
+buffer_t *scratch2 = NULL;
+
 bool KmerParsePass
 (
     Set<TKmer>&            localkmers, /* received k-mers will go here */
-    const Vector<String>&  myreads,
-    size_t&                myoffset,
-    Bloom&                 bm,
-    buffer_t              *scratch1,
-    buffer_t              *scratch2,
-    SharedPtr<CommGrid>    commgrid
+    const Vector<String>&  myreads,    /* local read sequence set */
+    size_t&                myoffset,   /* current read sequence offset */
+    Bloom&                 bm,         /* Bloom filter */
+    SharedPtr<CommGrid>    commgrid    /* communicator info */
 )
 {
     int myrank = commgrid->GetRank();
@@ -146,18 +147,15 @@ Set<TKmer> GetLocalKmers(const Vector<String>& myreads, SharedPtr<CommGrid> comm
 
     Bloom bm(cardinality, 0.05);
 
-    buffer_t *scratch1 = init_buffer(MAX_ALLTOALL_MEM);
-    buffer_t *scratch2 = init_buffer(MAX_ALLTOALL_MEM);
+    scratch1 = init_buffer(MAX_ALLTOALL_MEM);
+    scratch2 = init_buffer(MAX_ALLTOALL_MEM);
 
     size_t myoffset = 0;
     size_t numreads = myreads.size();
 
     bool finished;
 
-    do
-    {
-        finished = KmerParsePass(localkmers, myreads, myoffset, bm, scratch1, scratch2, commgrid);
-    } while (!finished);
+    do { finished = KmerParsePass(localkmers, myreads, myoffset, bm, commgrid); } while (!finished);
 
     free_buffer(scratch1);
     free_buffer(scratch2);
