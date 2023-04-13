@@ -28,6 +28,22 @@ int main(int argc, char *argv[])
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
         Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
+
+
+        for (int i = 0; i < commgrid->GetSize(); ++i)
+        {
+            if (i == commgrid->GetRank())
+            {
+                for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
+                {
+                    std::cout << *itr << std::endl;
+                }
+                std::cout << std::endl;
+            }
+
+            MPI_Barrier(MPI_COMM_WORLD);
+        }
+
     }
 
 

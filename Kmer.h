@@ -83,6 +83,14 @@ namespace std
             return myhash;
         }
     };
+
+    template <int N_LONGS> struct less<Kmer<N_LONGS>>
+    {
+        bool operator()(const Kmer<N_LONGS>& k1, const Kmer<N_LONGS>& k2) const
+        {
+            return k1 < k2;
+        }
+    };
 }
 
 #include "Kmer.cpp"

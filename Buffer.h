@@ -23,4 +23,8 @@ size_t grow_buffer(buffer_t *buffer, size_t append_size);
 char* get_start_buffer(buffer_t *buffer);
 void free_buffer(buffer_t *buffer);
 
+#if defined (__cplusplus)
+}
+#endif
+
 #endif

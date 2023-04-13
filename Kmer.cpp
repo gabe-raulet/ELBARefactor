@@ -250,7 +250,7 @@ template <int N_LONGS>
 int Kmer<N_LONGS>::GetInferredOwner(int nprocs) const
 {
     uint64_t myhash = GetHash();
-    double range = static_cast<double>(myhash) / static_cast<double>(nprocs);
+    double range = static_cast<double>(myhash) * static_cast<double>(nprocs);
     size_t owner = range / std::numeric_limits<uint64_t>::max();
     return static_cast<int>(owner);
 
