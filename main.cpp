@@ -9,7 +9,7 @@
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
-const int kmer_size = 15;
+const int kmer_size = 7;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
@@ -33,17 +33,10 @@ int main(int argc, char *argv[])
         for (int i = 0; i < commgrid->GetSize(); ++i)
         {
             if (i == commgrid->GetRank())
-            {
-                for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
-                {
-                    std::cout << *itr << std::endl;
-                }
-                std::cout << std::endl;
-            }
+                std::cerr << "Process " << i << " will store " << mykmers.size() << " k-mers" << std::endl;
 
             MPI_Barrier(MPI_COMM_WORLD);
         }
-
     }
 
 

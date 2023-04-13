@@ -6,7 +6,16 @@
 
 constexpr int64_t cardinality = 10000;
 
-bool KmerParsePass(Set<TKmer>& localkmers, const Vector<String>& myreads, Vector<Vector<TKmer>>& outgoing, Vector<TKmer>& mykmers, size_t& myoffset, Bloom& bm, buffer_t *scratch1, buffer_t *scratch2, SharedPtr<CommGrid> commgrid)
+bool KmerParsePass
+(
+    Set<TKmer>&            localkmers, /* received k-mers will go here */
+    const Vector<String>&  myreads,
+    size_t&                myoffset,
+    Bloom&                 bm,
+    buffer_t              *scratch1,
+    buffer_t              *scratch2,
+    SharedPtr<CommGrid>    commgrid
+)
 {
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
@@ -18,6 +27,9 @@ bool KmerParsePass(Set<TKmer>& localkmers, const Vector<String>& myreads, Vector
     size_t bytesperkmer = TKmer::N_BYTES;
     size_t bytesperentry = bytesperkmer + 4;
     size_t memthreshold = (MAX_ALLTOALL_MEM / nprocs) * 2;
+
+    Vector<TKmer> mykmers;
+    Vector<Vector<TKmer>> outgoing(nprocs);
 
     while (myoffset < nreads)
     {
@@ -137,9 +149,6 @@ Set<TKmer> GetLocalKmers(const Vector<String>& myreads, SharedPtr<CommGrid> comm
     buffer_t *scratch1 = init_buffer(MAX_ALLTOALL_MEM);
     buffer_t *scratch2 = init_buffer(MAX_ALLTOALL_MEM);
 
-    Vector<Vector<TKmer>> outgoing(nprocs);
-    Vector<TKmer> mykmers;
-
     size_t myoffset = 0;
     size_t numreads = myreads.size();
 
@@ -147,7 +156,7 @@ Set<TKmer> GetLocalKmers(const Vector<String>& myreads, SharedPtr<CommGrid> comm
 
     do
     {
-        finished = KmerParsePass(localkmers, myreads, outgoing, mykmers, myoffset, bm, scratch1, scratch2, commgrid);
+        finished = KmerParsePass(localkmers, myreads, myoffset, bm, scratch1, scratch2, commgrid);
     } while (!finished);
 
     free_buffer(scratch1);
