@@ -28,8 +28,26 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
-        Map<TKmer, KmerCountType> kmercounts;
-        KmerPass<false>(myreads, kmercounts, commgrid);
+        Set<TKmer> localkmers = GetLocalKmers(myreads, commgrid);
+
+        std::ostringstream ss;
+        ss << "kmers.rank" << commgrid->GetRank() << ".txt";
+
+        std::ofstream(ss.str());
+
+        for (int i = 0; i < commgrid->GetSize(); ++i)
+        {
+            if (i == commgrid->GetRank())
+            {
+                for (auto itr = localkmers.begin(); itr != localkmers.end(); ++itr)
+                    std::cout << *itr << std::endl;
+            }
+        }
+
+
+
+        // Map<TKmer, KmerCountType> kmercounts;
+        // KmerPass<false>(myreads, kmercounts, commgrid);
         // KmerPass<true>(myreads, kmercounts, commgrid);
 
         // uint64_t offset = myreads.size();

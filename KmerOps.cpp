@@ -22,7 +22,7 @@ double EstimateKmerCardinality(const Vector<String>& myreads, SharedPtr<CommGrid
     return hll.Estimate();
 }
 
-Set<TKmer> GetKmersSmart(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid)
+Set<TKmer> GetLocalKmers(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid)
 {
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
