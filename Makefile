@@ -35,4 +35,4 @@ Buffer.o: Buffer.c Buffer.h
 	gcc-12 -O2 -c -o $@ $<
 
 clean:
-	rm -rf main *.o *.dSYM *.out
+	rm -rf *.o *.dSYM *.out
