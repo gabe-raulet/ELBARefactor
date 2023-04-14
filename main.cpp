@@ -6,7 +6,7 @@
 #include <mpi.h>
 #include "common.h"
 #include "Kmer.h"
-#include "KmerOps.h"
+#include "KmerComm.h"
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
@@ -28,19 +28,8 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
-        Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
+        KmerCountMap kmercounts = GetKmerCountMap(myreads, commgrid);
 
-        std::ostringstream ss;
-        ss << "kmers.rank" << commgrid->GetRank() << ".txt";
-
-        std::ofstream filestream(ss.str());
-
-        for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
-        {
-            filestream << itr->GetString() << std::endl;
-        }
-
-        filestream.close();
     }
 
 
