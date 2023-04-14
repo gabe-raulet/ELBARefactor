@@ -3,11 +3,24 @@
 #include "Buffer.h"
 #include <numeric>
 #include <algorithm>
-
-constexpr int64_t cardinality = 10000;
+#include <cmath>
 
 buffer_t *scratch1 = NULL;
 buffer_t *scratch2 = NULL;
+
+double EstimateKmerCardinality(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid)
+{
+    HyperLogLog hll(12);
+
+    for (auto itr = myreads.begin(); itr != myreads.end(); ++itr)
+    {
+        TKmer::InsertIntoHLL(*itr, hll);
+    }
+
+    hll.ParallelMerge(commgrid->GetWorld());
+
+    return hll.Estimate();
+}
 
 bool KmerParsePass
 (
@@ -145,7 +158,14 @@ Set<TKmer> GetLocalKmers(const Vector<String>& myreads, SharedPtr<CommGrid> comm
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
 
-    Bloom bm(cardinality, 0.05);
+    double cardinality = EstimateKmerCardinality(myreads, commgrid);
+
+    if (!myrank) std::cerr << "Estimated k-mer  cardinality is " << cardinality << std::endl;
+
+    size_t amt = static_cast<size_t>(cardinality * 0.1 + 64000); /* ?? */
+    int64_t intcard = static_cast<int64_t>(std::ceil(cardinality));
+
+    Bloom bm(intcard, 0.05);
 
     scratch1 = init_buffer(MAX_ALLTOALL_MEM);
     scratch2 = init_buffer(MAX_ALLTOALL_MEM);

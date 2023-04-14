@@ -247,6 +247,21 @@ Vector<Kmer<N_LONGS>> Kmer<N_LONGS>::GetRepKmers(const String& s)
 }
 
 template <int N_LONGS>
+void Kmer<N_LONGS>::InsertIntoHLL(const String& s, HyperLogLog& hll)
+{
+    std::size_t kmer_size = static_cast<std::size_t>(k);
+
+    Vector<Kmer<N_LONGS>> mykmers = Kmer<N_LONGS>::GetRepKmers(s);
+
+    for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
+    {
+        String mer = itr->GetString();
+        char const *s = mer.c_str();
+        hll.Add(s);
+    }
+}
+
+template <int N_LONGS>
 int Kmer<N_LONGS>::GetInferredOwner(int nprocs) const
 {
     uint64_t myhash = GetHash();

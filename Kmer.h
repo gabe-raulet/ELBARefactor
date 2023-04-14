@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstring>
 #include "common.h"
+#include "HyperLogLog.h"
 
 template <int N_LONGS>
 class Kmer
@@ -54,6 +55,8 @@ public:
 
     static Vector<Kmer> GetKmers(const String& s);
     static Vector<Kmer> GetRepKmers(const String& s);
+
+    static void InsertIntoHLL(const String& s, HyperLogLog& hll);
 
     template <int N>
     friend std::ostream& operator<<(std::ostream& os, const Kmer<N>& kmer);
