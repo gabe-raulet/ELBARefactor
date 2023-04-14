@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
-        Set<TKmer> mykmers = GetLocalKmers(myreads, commgrid);
+        Set<TKmer> mykmers = GetKmersSmart(myreads, commgrid);
 
         std::ostringstream ss;
         ss << "kmers.rank" << commgrid->GetRank() << ".txt";
