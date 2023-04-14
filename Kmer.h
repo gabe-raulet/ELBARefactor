@@ -98,6 +98,6 @@ namespace std
 
 #include "Kmer.cpp"
 
-typedef Kmer<1> TKmer;
+typedef Kmer<2> TKmer;
 
 #endif

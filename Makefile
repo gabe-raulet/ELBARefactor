@@ -10,7 +10,13 @@ all: main
 main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o Buffer.o HyperLogLog.o
 	$(COMPILER) -o $@ $^ $(ALL_FLAGS) -lz
 
+test: test.o
+	$(COMPILER) -o $@ $^ $(ALL_FLAGS) -lz
+
 main.o: main.cpp CommGrid.h Kmer.cpp Kmer.h
+	$(COMPILER) $(FLAGS) -c -o $@ $<
+
+test.o: test.cpp
 	$(COMPILER) $(FLAGS) -c -o $@ $<
 
 CommGrid.o: CommGrid.cpp CommGrid.h
