@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
-        KmerCountMap kmercounts = GetKmerCountMap(myreads, commgrid);
+        KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
+        GetKmerCountMapValues(myreads, kmercounts, commgrid);
 
     }
 

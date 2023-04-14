@@ -13,10 +13,6 @@
 #define UPPER_KMER_FREQ 30
 #endif
 
-#ifndef MAX_ALLTOALL_MEM
-#define MAX_ALLTOALL_MEM (128*1024*1024) /* 128 MB */
-#endif
-
 typedef uint16_t PosInRead;
 typedef uint64_t ReadId;
 
@@ -26,6 +22,7 @@ typedef Array<ReadId,    UPPER_KMER_FREQ> READIDS;
 typedef Tuple<READIDS, POSITIONS, int> KmerCountEntry;
 typedef Map<TKmer, KmerCountEntry> KmerCountMap;
 
-KmerCountMap GetKmerCountMap(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
+KmerCountMap GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
+void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid);
 
 #endif

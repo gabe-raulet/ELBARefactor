@@ -1,6 +1,19 @@
 #include "KmerComm.h"
 
-KmerCountMap GetKmerCountMap(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid)
+KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
-    return KmerCountMap();
+    KmerCountMap kmermap;
+
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    size_t numreads = myreads.size();
+
+
+    return kmermap;
 }
+
+void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid)
+{
+    return;
+}
+
