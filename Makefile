@@ -2,13 +2,21 @@ K?=31
 MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
+MPICH_FLAGS=
+FLAGS=-DKMER_SIZE=$(K) -O2 -Wno-maybe-uninitialized -std=c++17
+UNAME_S:=$(shell uname -s)
+
+ifeq ($(UNAME_S),Linux)
+COMPILER=mpic++
+else ifeq ($(UNAME_S),Darwin)
 COMPILER=g++-12
-MPICH_FLAGS=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
-FLAGS=-DKMER_SIZE=$(K) -O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC)
+FLAGS+=$(MPICH_INC)
+MPICH_FLAGS+=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
+endif
 
 all: main
 
-main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o Buffer.o HyperLogLog.o
+main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o
 	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
 
 test: test.o
@@ -40,9 +48,6 @@ KmerComm.o: KmerComm.cpp KmerComm.h
 
 Bloom.o: Bloom.cpp Bloom.h
 	$(COMPILER) $(FLAGS) -c -o $@ $<
-
-Buffer.o: Buffer.c Buffer.h
-	gcc-12 -O2 -c -o $@ $<
 
 clean:
 	rm -rf main *.o *.dSYM *.out
