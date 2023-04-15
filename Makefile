@@ -2,16 +2,16 @@ MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 COMPILER=g++-12
-ALL_FLAGS=-O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC) $(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
+MPICH_FLAGS=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
 FLAGS=-O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC)
 
 all: main
 
 main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o Buffer.o HyperLogLog.o
-	$(COMPILER) -o $@ $^ $(ALL_FLAGS) -lz
+	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
 
 test: test.o
-	$(COMPILER) -o $@ $^ $(ALL_FLAGS) -lz
+	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
 
 main.o: main.cpp CommGrid.h Kmer.cpp Kmer.h
 	$(COMPILER) $(FLAGS) -c -o $@ $<

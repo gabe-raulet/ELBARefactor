@@ -65,6 +65,9 @@ template <int N_LONGS>
 Kmer<N_LONGS>::Kmer(const Kmer& o) : longs(o.longs) {}
 
 template <int N_LONGS>
+Kmer<N_LONGS>::Kmer(const void *mem) : Kmer() { CopyDataFrom(mem); }
+
+template <int N_LONGS>
 String Kmer<N_LONGS>::GetString() const
 {
     String s(k, '\0');

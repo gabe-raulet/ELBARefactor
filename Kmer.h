@@ -30,6 +30,7 @@ public:
 
     Kmer();
     Kmer(char const *s);
+    Kmer(const void *mem);
     Kmer(const Kmer& o);
 
     Kmer& operator=(const Kmer& o);
@@ -98,6 +99,6 @@ namespace std
 
 #include "Kmer.cpp"
 
-typedef Kmer<2> TKmer;
+typedef Kmer<1> TKmer;
 
 #endif
