@@ -108,9 +108,8 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
          * Get starting adddress of buffer space for kmerbuckets[i].
          */
         uint8_t *addrs2fill = sendbuf.data() + sdispls[i];
-        size_t tosend = sendcnt[i] / TKmer::N_BYTES;
 
-        for (MPI_Count_type j = 0; j < tosend; ++j)
+        for (MPI_Count_type j = 0; j < kmerbuckets[i].size(); ++j)
         {
             /*
              * Copy jth k-mer to be sent to ith processor into the
