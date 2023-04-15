@@ -55,6 +55,18 @@ Set<TKmer> GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid
         }
     }
 
+    // if (myrank == 3)
+    // {
+        // PrintItem<String>(myreads);
+        // std::cout << std::endl;
+        // for (int i = 0; i < nprocs; ++i)
+        // {
+            // std::cout << i << ": ";
+            // PrintItem<TKmer>(kmerbuckets[i]);
+            // std::cout << std::endl;
+        // }
+    // }
+
     /*
      * Alltoallv communication of k-mers requires communication parameters
      * sendcnt, recvcnt, sdispls, and rdispls.

@@ -22,6 +22,12 @@ void PrintVector(const Vector<T>& vec, SharedPtr<CommGrid>& commgrid)
             std::cout << myrank << ": ";
             int len = vec.size();
 
+            if (len == 0)
+            {
+                std::cout << std::endl;
+                continue;
+            }
+
             for (int j = 0; j < len-1; ++j)
             {
                 std::cout << vec[j] << ", ";
@@ -32,6 +38,25 @@ void PrintVector(const Vector<T>& vec, SharedPtr<CommGrid>& commgrid)
 
         MPI_Barrier(world);
     }
+}
+
+template <class T>
+void PrintItem(const Vector<T>& vec)
+{
+    int len = vec.size();
+
+    if (len == 0)
+    {
+        std::cout << std::endl;
+        return;
+    }
+
+    for (int j = 0; j < len-1; ++j)
+    {
+        std::cout << vec[j] << ", ";
+    }
+
+    std::cout << vec[len-1] << std::endl;
 }
 
 template <class T>

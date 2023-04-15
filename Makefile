@@ -4,7 +4,7 @@ MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 COMPILER=g++-12
 MPICH_FLAGS=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
-FLAGS=-O2 -Wno-maybe-uninitialized -std=c++17 -DKMER_SIZE=$(K) $(MPICH_INC)
+FLAGS=-O0 -Wno-maybe-uninitialized -std=c++17 -DKMER_SIZE=$(K) $(MPICH_INC)
 
 all: main
 

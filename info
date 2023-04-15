@@ -1,0 +1,60 @@
+processor 0 stores one read: TGCCCGGCGGCACGCCCGAAGATGAAAAT
+procesor 0 sends its k-mers to the following processors:
+    0: 27-mer(TGCCCGGCGGCACGCCCGAAGATGAAA)
+    1: 27-mer(CCCGGCGGCACGCCCGAAGATGAAAAT)
+    2:
+    3: 27-mer(GCCCGGCGGCACGCCCGAAGATGAAAA)
+
+processor 1 stores one read: CGTCGTGCAACTCTTCCGGCATTGGCGGT
+processor 1 sends its k-mers to the following processors:
+    0: 27-mer(CGTCGTGCAACTCTTCCGGCATTGGCG)
+    1: 27-mer(TCGTGCAACTCTTCCGGCATTGGCGGT)
+    2:
+    3: 27-mer(GTCGTGCAACTCTTCCGGCATTGGCGG)
+
+processor 2 stores one read: GTCGGCAAGTACATTGAACTGCCGGATGC
+processor 2 sends its k-mers to the following processors:
+    0: 27-mer(GTCGGCAAGTACATTGAACTGCCGGAT), 27-mer(CGGCAAGTACATTGAACTGCCGGATGC)
+    1:
+    2: 27-mer(TCGGCAAGTACATTGAACTGCCGGATG)
+    3:
+
+processor 3 stores one read: ACCGACGCGCAAAAGGGCATTATCATTCA
+processor 3 sends its k-mers to the following processors:
+    0: 27-mer(CGACGCGCAAAAGGGCATTATCATTCA)
+    1:
+    2: 27-mer(CCGACGCGCAAAAGGGCATTATCATTC)
+    3: 27-mer(ACCGACGCGCAAAAGGGCATTATCATT)
+
+###########################################
+
+processor 0 will receive the following k-mers from the following processors:
+    0: 27-mer(TGCCCGGCGGCACGCCCGAAGATGAAA)
+    1: 27-mer(CGTCGTGCAACTCTTCCGGCATTGGCG)
+    2: 27-mer(GTCGGCAAGTACATTGAACTGCCGGAT), 27-mer(CGGCAAGTACATTGAACTGCCGGATGC)
+    3: 27-mer(CGACGCGCAAAAGGGCATTATCATTCA)
+
+processor 1 will receive the following k-mers from the following processors:
+    0: 27-mer(CCCGGCGGCACGCCCGAAGATGAAAAT)
+    1: 27-mer(TCGTGCAACTCTTCCGGCATTGGCGGT)
+    2:
+    3:
+
+processor 2 will receive the following k-mers from the following processors:
+    0:
+    1:
+    2: 27-mer(TCGGCAAGTACATTGAACTGCCGGATG)
+    3: 27-mer(CCGACGCGCAAAAGGGCATTATCATTC)
+
+processor 3 will receive the following k-mers from the following processors:
+    0: 27-mer(GCCCGGCGGCACGCCCGAAGATGAAAA)
+    1: 27-mer(GTCGTGCAACTCTTCCGGCATTGGCGG)
+    2:
+    3: 27-mer(ACCGACGCGCAAAAGGGCATTATCATT)
+
+################################################
+
+processor 0 receives 5 k-mers
+processor 1 receives 2 k-mers
+processor 2 receives 2 k-mers
+processor 3 receives 3 k-mers

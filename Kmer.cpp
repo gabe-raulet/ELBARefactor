@@ -270,6 +270,7 @@ int Kmer<N_LONGS>::GetInferredOwner(int nprocs) const
     uint64_t myhash = GetHash();
     double range = static_cast<double>(myhash) * static_cast<double>(nprocs);
     size_t owner = range / std::numeric_limits<uint64_t>::max();
+    assert(owner >= 0 && owner < static_cast<size_t>(nprocs));
     return static_cast<int>(owner);
 
 }
