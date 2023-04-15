@@ -2,9 +2,9 @@
 #include <numeric>
 #include <algorithm>
 
-KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
+Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
-    KmerCountMap kmermap;
+    Set<TKmer> kmerset;
 
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
@@ -149,13 +149,13 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
         TKmer mer(addrs2read);
         addrs2read += TKmer::N_BYTES;
 
-        if (kmermap.find(mer) == kmermap.end())
+        if (kmerset.find(mer) == kmerset.end())
         {
-            kmermap.insert({mer, KmerCountEntry()});
+            kmerset.insert(mer);
         }
     }
 
-    return kmermap;
+    return kmerset;
 }
 
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid)

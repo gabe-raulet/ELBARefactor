@@ -22,7 +22,7 @@ typedef Array<ReadId,    UPPER_KMER_FREQ> READIDS;
 typedef Tuple<READIDS, POSITIONS, int> KmerCountEntry;
 typedef Map<TKmer, KmerCountEntry> KmerCountMap;
 
-KmerCountMap GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
+Set<TKmer> GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid);
 
 #endif
