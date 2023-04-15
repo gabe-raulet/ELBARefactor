@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
 
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
-        for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
-        {
-            std::cout << itr->first << std::endl;
-        }
+        // for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
+        // {
+            // std::cout << itr->first << std::endl;
+        // }
 
     }
 

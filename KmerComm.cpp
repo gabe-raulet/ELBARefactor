@@ -53,8 +53,6 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
         }
     }
 
-    std::cout << __LINE__ << std::endl;
-
     /*
      * Alltoallv communication of k-mers requires communication parameters
      * sendcnt, recvcnt, sdispls, and rdispls.
