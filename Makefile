@@ -1,9 +1,10 @@
+K?=31
 MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 COMPILER=g++-12
 MPICH_FLAGS=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
-FLAGS=-O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC)
+FLAGS=-DKMER_SIZE=$(K) -O2 -Wno-maybe-uninitialized -std=c++17 $(MPICH_INC)
 
 all: main
 

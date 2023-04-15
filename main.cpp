@@ -10,7 +10,7 @@
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
-const int kmer_size = 7;
+const int kmer_size = KMER_SIZE;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
@@ -30,10 +30,19 @@ int main(int argc, char *argv[])
 
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
-        // for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
-        // {
-            // std::cout << itr->first << std::endl;
-        // }
+        for (int i = 0; i < commgrid->GetSize(); ++i)
+        {
+            if (i == commgrid->GetRank())
+            {
+                for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
+                {
+                    std::cout << itr->first << std::endl;
+                }
+                std::cout << std::endl;
+            }
+
+            MPI_Barrier(commgrid->GetWorld());
+        }
 
     }
 
