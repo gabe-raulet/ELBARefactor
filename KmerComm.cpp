@@ -1,4 +1,5 @@
 #include "KmerComm.h"
+#include "MPIPrint.h"
 #include <numeric>
 #include <algorithm>
 
@@ -94,6 +95,10 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
      */
     int64_t totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
     int64_t totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
+
+    PrintItem<int>(totsend, commgrid);
+    PrintItem<int>(totrecv, commgrid);
+
 
     /*
      * Pack send buffer.

@@ -7,6 +7,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <set>
+#include <limits>
 #include <memory>
 #include <cstdint>
 #include <mpi.h>
@@ -36,6 +37,9 @@ using Tuple = std::tuple<Types...>;
 
 template <class T>
 using Hash = std::hash<T>;
+
+template <class T>
+using Limits = std::numeric_limits<T>;
 
 // #if MPI_VERSION == 3
 // #define MPI_HAS_LARGE_COUNTS 0

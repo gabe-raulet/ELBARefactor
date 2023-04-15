@@ -10,7 +10,11 @@
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
-const int kmer_size = 7;
+#ifndef KMER_SIZE
+#define KMER_SIZE 7
+#endif
+
+const int kmer_size = KMER_SIZE;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
@@ -24,7 +28,7 @@ int main(int argc, char *argv[])
 
         FastaIndex index(fasta_fname, commgrid);
 
-        index.PrintInfo();
+        // index.PrintInfo();
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
