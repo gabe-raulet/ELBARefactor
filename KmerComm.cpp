@@ -3,7 +3,7 @@
 #include <numeric>
 #include <algorithm>
 
-Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
+Set<TKmer> GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid)
 {
     Set<TKmer> kmerset;
 
@@ -39,7 +39,8 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
         /*
          * Get all the representative k-mer seeds.
          */
-        Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
+        // Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
+        Vector<TKmer> repmers = TKmer::GetKmers(*readitr);
 
         /*
          * Go through each k-mer seed.
@@ -95,10 +96,6 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
      */
     int64_t totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
     int64_t totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
-
-    PrintItem<int>(totsend, commgrid);
-    PrintItem<int>(totrecv, commgrid);
-
 
     /*
      * Pack send buffer.
