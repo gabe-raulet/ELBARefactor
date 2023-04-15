@@ -57,10 +57,10 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
      * Alltoallv communication of k-mers requires communication parameters
      * sendcnt, recvcnt, sdispls, and rdispls.
      */
-    std::vector<MPI_Count_type> sendcnt(nprocs); /* sendcnt[i] is number of bytes of k-mers this process sends to process i */
-    std::vector<MPI_Count_type> recvcnt(nprocs); /* recvnct[i] is number of bytes of k-mers this process receives from process i */
-    std::vector<MPI_Displ_type> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */
-    std::vector<MPI_Displ_type> rdispls(nprocs); /* rdispls[i] = rdispls[i-1] + recvcnt[i] */
+    std::vector<int> sendcnt(nprocs); /* sendcnt[i] is number of bytes of k-mers this process sends to process i */
+    std::vector<int> recvcnt(nprocs); /* recvnct[i] is number of bytes of k-mers this process receives from process i */
+    std::vector<int> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */
+    std::vector<int> rdispls(nprocs); /* rdispls[i] = rdispls[i-1] + recvcnt[i] */
 
     /*
      * Initialize sendcnt parameter for local process.
@@ -78,7 +78,7 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
      * Let every process know how many k-mers it will be receiving
      * from each other process.
      */
-    MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
+    MPI_Alltoall(sendcnt.data(), 1, MPI_INT, recvcnt.data(), 1, MPI_INT, commgrid->GetWorld());
 
     /*
      * Initialize displacement parameters now that we know both send and receive counts.
@@ -109,7 +109,7 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
          */
         uint8_t *addrs2fill = sendbuf.data() + sdispls[i];
 
-        for (MPI_Count_type j = 0; j < sendcnt[i]; ++j)
+        for (int j = 0; j < sendcnt[i]; ++j)
         {
             /*
              * Copy jth k-mer to be sent to ith processor into the
@@ -135,7 +135,7 @@ Set<TKmer> GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGri
     /*
      * Send all the k-mers around.
      */
-    MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
+    MPI_Alltoallv(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
     /*
      * Get actual number of k-mer received.

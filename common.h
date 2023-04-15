@@ -37,30 +37,30 @@ using Tuple = std::tuple<Types...>;
 template <class T>
 using Hash = std::hash<T>;
 
-#if MPI_VERSION == 3
-#define MPI_HAS_LARGE_COUNTS 0
+// #if MPI_VERSION == 3
+// #define MPI_HAS_LARGE_COUNTS 0
 
-typedef int MPI_Count_type;
-typedef int MPI_Displ_type;
+// typedef int MPI_Count_type;
+// typedef int MPI_Displ_type;
 
-#define MPI_COUNT_TYPE MPI_INT
+// #define MPI_COUNT_TYPE MPI_INT
 
-#define MPI_ALLTOALL MPI_Alltoall
-#define MPI_ALLTOALLV MPI_Alltoallv
+// #define MPI_ALLTOALL MPI_Alltoall
+// #define MPI_ALLTOALLV MPI_Alltoallv
 
-#elif MPI_VERSION == 4
-#define MPI_HAS_LARGE_COUNTS 1
+// #elif MPI_VERSION == 4
+// #define MPI_HAS_LARGE_COUNTS 1
 
-typedef MPI_Count MPI_Count_type;
-typedef MPI_Aint MPI_Displ_type;
+// typedef MPI_Count MPI_Count_type;
+// typedef MPI_Aint MPI_Displ_type;
 
-#define MPI_COUNT_TYPE MPI_COUNT
+// #define MPI_COUNT_TYPE MPI_COUNT
 
-#define MPI_ALLTOALL MPI_Alltoall_c
-#define MPI_ALLTOALLV MPI_Alltoallv_c
+// #define MPI_ALLTOALL MPI_Alltoall_c
+// #define MPI_ALLTOALLV MPI_Alltoallv_c
 
-#else
-#error "MPI version should either be 3 or 4."
-#endif
+// #else
+// #error "MPI version should either be 3 or 4."
+// #endif
 
 #endif
