@@ -9,7 +9,9 @@
 #include "KmerComm.h"
 #include "CommGrid.h"
 #include "FastaIndex.h"
+#include "Timer.h"
 
+Timer *timer = nullptr;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
@@ -21,12 +23,7 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
-        if (!myrank)
-        {
-            std::cerr << "[ELBA]: -DKMER_SIZE=" << KMER_SIZE << " -DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << " -DUPPER_KMER_FREQ=" << UPPER_KMER_FREQ << " -DHLLFLAG=" << HLLFLAG << std::endl;
-        }
-
-        MPI_Barrier(commgrid->GetWorld());
+        timer = new Timer(MPI_COMM_WORLD);
 
         FastaIndex index(fasta_fname, commgrid);
 
@@ -39,6 +36,7 @@ int main(int argc, char *argv[])
 
         if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
 
+        delete timer;
     }
 
 
