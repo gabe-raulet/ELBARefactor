@@ -42,9 +42,9 @@ struct EstimateHandler
 struct PackingHandler
 {
     int nprocs;
-    Vector<Vector<TKmer>> kmerbuckets;
+    Vector<Vector<TKmer>>& kmerbuckets;
 
-    PackingHandler(SharedPtr<CommGrid> commgrid) : nprocs(commgrid->GetSize()), kmerbuckets(nprocs) {}
+    PackingHandler(Vector<Vector<TKmer>>& kmerbuckets) : nprocs(kmerbuckets.size()), kmerbuckets(kmerbuckets) {}
 
     void operator()(const TKmer& kmer)
     {
@@ -55,7 +55,7 @@ struct PackingHandler
         kmerbuckets[owner].push_back(kmer);
     }
 
-    Vector<Vector<TKmer>>& GetKmerBuckets() { return kmerbuckets; }
+    // Vector<Vector<TKmer>>& GetKmerBuckets() { return kmerbuckets; }
 };
 
 template <typename KmerHandler>

@@ -23,9 +23,9 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * fact be the same "k-mer".
      */
 
-    PackingHandler packer(commgrid);
+    Vector<Vector<TKmer>> kmerbuckets(nprocs); /* outgoing k-mer buckets */
+    PackingHandler packer(kmerbuckets);
     ForeachKmer(myreads, packer);
-    Vector<Vector<TKmer>>& kmerbuckets = packer.GetKmerBuckets(); /* outgoing k-mer buckets */
 
     /*
      * Alltoallv communication of k-mers requires communication parameters
