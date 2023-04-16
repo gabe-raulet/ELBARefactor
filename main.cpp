@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
 
     {
         auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD));
+        int myrank = commgrid->GetRank();
+        int nprocs = commgrid->GetSize();
 
         FastaIndex index(fasta_fname, commgrid);
 
@@ -30,19 +32,10 @@ int main(int argc, char *argv[])
 
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
-        for (int i = 0; i < commgrid->GetSize(); ++i)
-        {
-            if (i == commgrid->GetRank())
-            {
-                for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
-                {
-                    std::cout << itr->first << std::endl;
-                }
-                std::cout << std::endl;
-            }
+        unsigned long numkmers = kmercounts.size();
+        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_UNSIGNED_LONG, MPI_SUM, commgrid->GetWorld());
 
-            MPI_Barrier(commgrid->GetWorld());
-        }
+        if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
 
     }
 

@@ -10,7 +10,6 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     int nprocs = commgrid->GetSize();
     size_t numreads = myreads.size();
 
-    Vector<Vector<TKmer>> kmerbuckets(nprocs); /* outgoing k-mer buckets */
 
     /*
      * When we use the word "k-mer" there are often actually two different things
@@ -24,34 +23,9 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * fact be the same "k-mer".
      */
 
-    /*
-     * Go through each local read.
-     */
-    for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr)
-    {
-        /*
-         * If it is too small then continue to the next one.
-         */
-        if (readitr->size() < TKmer::k)
-            continue;
-
-        /*
-         * Get all the representative k-mer seeds.
-         */
-        Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
-
-        /*
-         * Go through each k-mer seed.
-         */
-        for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr)
-        {
-            /*
-             * Get destination processor rank of this k-mer seed
-             * and put it in the corresponding bucket.
-             */
-            kmerbuckets[meritr->GetInferredOwner(nprocs)].push_back(*meritr);
-        }
-    }
+    PackingHandler packer(commgrid);
+    ForeachKmer(myreads, packer);
+    Vector<Vector<TKmer>>& kmerbuckets = packer.GetKmerBuckets(); /* outgoing k-mer buckets */
 
     /*
      * Alltoallv communication of k-mers requires communication parameters
@@ -162,4 +136,5 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 {
     return;
 }
+
 
