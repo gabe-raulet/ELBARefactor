@@ -5,6 +5,11 @@
 
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
+    /*
+     * This function initializes an associative container of k-mers on each processor,
+     * whose keys correspond to the reliable k-mers that have been assigned to that processor.
+     */
+
     KmerCountMap kmermap;
 
     int myrank = commgrid->GetRank();
@@ -23,23 +28,72 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * fact be the same "k-mer".
      */
 
+    /*
+     * The function ForeachKmer is a template function. The underlying function
+     * scans through each "seed k-mer" in every sequence passed to it (i.e. myreads)
+     * and calls the handler (a function object whose operator() operates on a TKmer object)
+     * on every "seed k-mer". We use use this because there are multiple different
+     * circumstances where we want to enumerate all seed k-mers and do something to them,
+     * but we don't want to have to rewrite the loops everytime we want to do
+     * something different with the seed k-mers.
+     *
+     * We first want to estimate the total number of unique "k-mers" in
+     * our dataset without having to store all the k-mers in memory (e.g. in a Set object),
+     * which we can do using the HyperLogLog count-distinct data structure. We therefore
+     * initialize a HyperLogLog object, and attach it to a function object called KmerEstimateHandler,
+     * which defines the primitive operation we are interested in, namely: adding a k-mer
+     * to the HyperLogLog counter.
+     */
     HyperLogLog hll(12);
-    EstimateHandler estimator(hll);
-    ForeachKmer(myreads, estimator);
+    KmerEstimateHandler estimator(hll);
+    ForeachKmer(myreads, estimator); /* Adds each representative seed k-mer to HyperLogLog */
 
+    /*
+     * The KmerEstimateHandler object took the HyperLogLog object by reference, so
+     * we can immediately access its results in the current scope.
+     *
+     * We first want to merge all the individual results across all the processors
+     * in the grid communicator, and then we can get an estimate for the total
+     * number of unique k-mers in the dataset.
+     */
     hll.ParallelMerge(commgrid->GetWorld());
     size_t cardinality_estimate = static_cast<size_t>(std::ceil(hll.Estimate()));
 
     if (!myrank) std::cout << "Estimate a total of " << cardinality_estimate << " k-mers" << std::endl;
 
+    /*
+     * Remember what the final goal is: we want to find all the "seed k-mers" whose corresponding
+     * "k-mer" appears in the sequencing reads between LOWER_KMER_FREQ and UPPER_KMER_FREQ different
+     * times (inclusive). We call these "k-mers" "reliable k-mers". Eventually, we also want to
+     * record all the read ids and read positions for each "reliable k-mer". We start by figuring
+     * out which "k-mers" fit the above criteria, so that we can pass through all the reads again
+     * and just collect the read ids and positions when a "reliable k-mer" is found.
+     *
+     * This requires partitioning the k-mers so each processor is responsible for a distinct
+     * "k-mer". That way, when we are counting the number of times a "k-mer" appears in order
+     * to determine whether it is reliable or not, there is a single processor responsible
+     * for counting that "k-mer".
+     *
+     * We do this using the KmerPartitionHandler function object, which assigns k-mers to processor
+     * ranks using an injective function based on the hash of the k-mer. The object takes
+     * a vector of "k-mer buckets", one for each processor destination, so that we can put each
+     * "seed k-mer" found in the local read set into its correct outgoing bucket before
+     * peforming an Alltoall communication. The result of the Altoall will be that each processor
+     * receives a list of "seed k-mers" assigned to it by the partitioner, such that each "k-mer"
+     * has a unique processor destination id.
+     *
+     */
+
     Vector<Vector<TKmer>> kmerbuckets(nprocs); /* outgoing k-mer buckets */
-    PackingHandler packer(kmerbuckets);
-    ForeachKmer(myreads, packer);
+    KmerPartitionHandler partitioner(kmerbuckets);
+    ForeachKmer(myreads, partitioner); /* adds each representative seed k-mer to its proper outgoing bucket */
 
     /*
-     * Alltoallv communication of k-mers requires communication parameters
-     * sendcnt, recvcnt, sdispls, and rdispls.
+     * Now that we know where all the k-mers need to be sent to, we just need pack
+     * the data into a contiguous buffer and compute the corresponding Alltoallv
+     * communication parameters so that we can send the k-mers around.
      */
+
     Vector<MPI_Count_type> sendcnt(nprocs); /* sendcnt[i] is number of bytes of k-mers this process sends to process i */
     Vector<MPI_Count_type> recvcnt(nprocs); /* recvnct[i] is number of bytes of k-mers this process receives from process i */
     Vector<MPI_Displ_type> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */

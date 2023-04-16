@@ -29,11 +29,11 @@ typedef Map<TKmer, KmerCountEntry> KmerCountMap;
 KmerCountMap GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid);
 
-struct EstimateHandler
+struct KmerEstimateHandler
 {
     HyperLogLog& hll;
 
-    EstimateHandler(HyperLogLog& hll) : hll(hll) {}
+    KmerEstimateHandler(HyperLogLog& hll) : hll(hll) {}
 
     void operator()(const TKmer& kmer)
     {
@@ -41,12 +41,12 @@ struct EstimateHandler
     }
 };
 
-struct PackingHandler
+struct KmerPartitionHandler
 {
     int nprocs;
     Vector<Vector<TKmer>>& kmerbuckets;
 
-    PackingHandler(Vector<Vector<TKmer>>& kmerbuckets) : nprocs(kmerbuckets.size()), kmerbuckets(kmerbuckets) {}
+    KmerPartitionHandler(Vector<Vector<TKmer>>& kmerbuckets) : nprocs(kmerbuckets.size()), kmerbuckets(kmerbuckets) {}
 
     void operator()(const TKmer& kmer)
     {
@@ -86,8 +86,5 @@ void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
         }
     }
 }
-
-template void ForeachKmer<EstimateHandler>(const Vector<String>& myreads, EstimateHandler& handler);
-template void ForeachKmer<PackingHandler>(const Vector<String>& myreads, PackingHandler& handler);
 
 #endif
