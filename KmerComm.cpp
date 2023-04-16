@@ -8,7 +8,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 {
     /*
      * This function initializes an associative container of k-mers on each processor,
-     * whose keys correspond to the reliable k-mers that have been assigned to that processor.
+     * whose keys correspond to the k-mers that have been assigned to that processor.
      */
 
     KmerCountMap kmermap;
@@ -180,6 +180,8 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      */
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
+    kmermap.reserve(local_cardinality_estimate);
+
     /*
      * Get actual number of k-mer seeds received.
      */
@@ -197,6 +199,8 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
             kmermap.insert({mer, KmerCountEntry()});
         }
     }
+
+    std::cout << "Processor " << myrank << " received " << kmermap.size() << " distinct k-mers" << std::endl;
 
     return kmermap;
 }
