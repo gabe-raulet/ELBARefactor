@@ -9,9 +9,7 @@
 #include "KmerComm.h"
 #include "CommGrid.h"
 #include "FastaIndex.h"
-#include "Timer.h"
 
-Timer *timer = nullptr;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
@@ -23,8 +21,6 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
-        timer = new Timer(MPI_COMM_WORLD);
-
         FastaIndex index(fasta_fname, commgrid);
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
@@ -35,8 +31,6 @@ int main(int argc, char *argv[])
         MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_UNSIGNED_LONG, MPI_SUM, commgrid->GetWorld());
 
         if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
-
-        delete timer;
     }
 
 
