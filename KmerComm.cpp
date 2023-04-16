@@ -1,6 +1,7 @@
 #include "KmerComm.h"
 #include <numeric>
 #include <algorithm>
+#include <iomanip>
 #include <cmath>
 
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
@@ -57,9 +58,14 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * number of unique k-mers in the dataset.
      */
     hll.ParallelMerge(commgrid->GetWorld());
-    size_t cardinality_estimate = static_cast<size_t>(std::ceil(hll.Estimate()));
+    double global_cardinality_estimate = hll.Estimate();
+    size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(global_cardinality_estimate / nprocs));
 
-    if (!myrank) std::cout << "Estimate a total of " << cardinality_estimate << " k-mers" << std::endl;
+    if (!myrank)
+    {
+        std::cout << "Estimate a total of " << std::fixed << std::setprecision(4) << global_cardinality_estimate << " k-mers" << std::endl;
+        std::cout << "Estimate an average of " << local_cardinality_estimate << " k-mers per processor" << std::endl;
+    }
 
     /*
      * Remember what the final goal is: we want to find all the "seed k-mers" whose corresponding
