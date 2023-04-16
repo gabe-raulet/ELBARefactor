@@ -10,7 +10,6 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     int nprocs = commgrid->GetSize();
     size_t numreads = myreads.size();
 
-
     /*
      * When we use the word "k-mer" there are often actually two different things
      * we are referring to, which can lead to confusion. One thing we're interested
@@ -121,13 +120,13 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
     /*
-     * Get actual number of k-mer received.
+     * Get actual number of k-mer seeds received.
      */
-    uint64_t nkmersrecvd = totrecv / TKmer::N_BYTES;
+    uint64_t numkmerseeds = totrecv / TKmer::N_BYTES;
 
     uint8_t *addrs2read = recvbuf.data();
 
-    for (uint64_t i = 0; i < nkmersrecvd; ++i)
+    for (uint64_t i = 0; i < numkmerseeds; ++i)
     {
         TKmer mer(addrs2read);
         addrs2read += TKmer::N_BYTES;

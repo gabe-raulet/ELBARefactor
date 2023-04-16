@@ -69,7 +69,7 @@ void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
         /*
          * If it is too small then continue to the next one.
          */
-        if (readitr->size() < TKmer::k)
+        if (readitr->size() < KMER_SIZE)
             continue;
 
         /*

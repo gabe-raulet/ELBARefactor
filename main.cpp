@@ -10,14 +10,11 @@
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
-const int kmer_size = KMER_SIZE;
 const String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);
-
-    TKmer::SetKmerSize(kmer_size);
 
     {
         auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD));

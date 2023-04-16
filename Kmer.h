@@ -27,16 +27,9 @@ public:
     static_assert(N_LONGS != 0);
 
     static constexpr int N_BYTES = 8 * N_LONGS;
-    static inline int k = 32*N_LONGS - 1;
 
     typedef Array<uint64_t, N_LONGS> MERARR;
     typedef Array<uint8_t,  N_BYTES> BYTEARR;
-
-    static void SetKmerSize(int kmer_size)
-    {
-        assert((kmer_size & 1) && ((32*(N_LONGS-1)) <= kmer_size) && ((kmer_size < 32*N_LONGS)));
-        k = kmer_size;
-    }
 
     Kmer();
     Kmer(char const *s);
@@ -59,15 +52,11 @@ public:
     uint64_t GetHash() const;
     const void* GetBytes() const { return reinterpret_cast<const void*>(longs.data()); }
 
-    int GetInferredOwner(int nprocs) const;
-
     void CopyDataInto(void *mem) const { std::memcpy(mem, longs.data(), N_BYTES); }
     void CopyDataFrom(const void *mem) { std::memcpy(longs.data(), mem, N_BYTES); }
 
     static Vector<Kmer> GetKmers(const String& s);
     static Vector<Kmer> GetRepKmers(const String& s);
-
-    static void InsertIntoHLL(const String& s, HyperLogLog& hll);
 
     template <int N>
     friend std::ostream& operator<<(std::ostream& os, const Kmer<N>& kmer);
@@ -83,7 +72,7 @@ private:
 template <int N_LONGS>
 std::ostream& operator<<(std::ostream& os, const Kmer<N_LONGS>& kmer)
 {
-    os << kmer.k << "-mer(" << kmer.GetString() << ")";
+    os << KMER_SIZE << "-mer(" << kmer.GetString() << ")";
     return os;
 }
 
@@ -108,11 +97,6 @@ namespace std
 }
 
 #include "Kmer.cpp"
-
-#ifndef KMER_SIZE
-#define KMER_SIZE 31
-#endif
-
 
 using TKmer = typename std::conditional<(KMER_SIZE <= 32), Kmer<1>,
               typename std::conditional<(KMER_SIZE <= 64), Kmer<2>,

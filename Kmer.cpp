@@ -70,11 +70,11 @@ Kmer<N_LONGS>::Kmer(const void *mem) : Kmer() { CopyDataFrom(mem); }
 template <int N_LONGS>
 String Kmer<N_LONGS>::GetString() const
 {
-    String s(k, '\0');
+    String s(KMER_SIZE, '\0');
 
     int i, j, l;
 
-    for (i = 0; i < k; ++i)
+    for (i = 0; i < KMER_SIZE; ++i)
     {
         j = i % 32;
         l = i / 32;
@@ -96,12 +96,12 @@ void Kmer<N_LONGS>::set_kmer(char const *s, bool const revcomp)
      * been completely zeroed out.
      */
 
-    for (i = 0; i < k; ++i)
+    for (i = 0; i < KMER_SIZE; ++i)
     {
         j = i % 32;
         l = i / 32;
 
-        idx = revcomp? k - i - 1 : i;
+        idx = revcomp? KMER_SIZE - i - 1 : i;
         code = static_cast<uint64_t>(get_nt_code(s[idx]));
 
         longs[l] |= ((revcomp? 3 - code : code) << (2 * (31 - j)));
@@ -139,8 +139,6 @@ bool Kmer<N_LONGS>::operator>(const Kmer& o) const
 template <int N_LONGS>
 bool Kmer<N_LONGS>::operator==(const Kmer& o) const
 {
-    if (k != o.k) return false;
-
     for (int i = 0; i < N_LONGS; ++i)
         if (longs[i] != o.longs[i])
             return false;
@@ -167,7 +165,7 @@ Kmer<N_LONGS> Kmer<N_LONGS>::GetExtension(char const nt) const
         ext.longs[i] = longs[i] << 2;
     }
 
-    ext.longs[N_LONGS-1] |= (static_cast<uint64_t>(get_nt_code(nt)) << (2 * (32 - (k%32))));
+    ext.longs[N_LONGS-1] |= (static_cast<uint64_t>(get_nt_code(nt)) << (2 * (32 - (KMER_SIZE%32))));
 
     return ext;
 }
@@ -191,8 +189,8 @@ Kmer<N_LONGS> Kmer<N_LONGS>::GetTwin() const
         }
     }
 
-    uint64_t shift = k % 32? 2 * (32 - (k % 32)) : 0ULL;
-    uint64_t mask = k % 32? ((1ULL << shift) - 1) << (64 - shift) : 0ULL;
+    uint64_t shift = KMER_SIZE % 32? 2 * (32 - (KMER_SIZE % 32)) : 0ULL;
+    uint64_t mask = KMER_SIZE % 32? ((1ULL << shift) - 1) << (64 - shift) : 0ULL;
 
     twin.longs[0] <<= shift;
 
@@ -224,7 +222,7 @@ template <int N_LONGS>
 Vector<Kmer<N_LONGS>> Kmer<N_LONGS>::GetKmers(const String& s)
 {
     int l = s.size();
-    int num_kmers = l - k + 1;
+    int num_kmers = l - KMER_SIZE + 1;
 
     if (num_kmers <= 0) return Vector<Kmer>();
 
@@ -235,7 +233,7 @@ Vector<Kmer<N_LONGS>> Kmer<N_LONGS>::GetKmers(const String& s)
 
     for (int i = 1; i < num_kmers; ++i)
     {
-        kmers.push_back(kmers.back().GetExtension(s[i+k-1]));
+        kmers.push_back(kmers.back().GetExtension(s[i+KMER_SIZE-1]));
     }
 
     return kmers;
@@ -247,30 +245,4 @@ Vector<Kmer<N_LONGS>> Kmer<N_LONGS>::GetRepKmers(const String& s)
     auto kmers = GetKmers(s);
     std::transform(kmers.begin(), kmers.end(), kmers.begin(), [](const Kmer& kmer) { return kmer.GetRep(); });
     return kmers;
-}
-
-template <int N_LONGS>
-void Kmer<N_LONGS>::InsertIntoHLL(const String& s, HyperLogLog& hll)
-{
-    std::size_t kmer_size = static_cast<std::size_t>(k);
-
-    Vector<Kmer<N_LONGS>> mykmers = Kmer<N_LONGS>::GetRepKmers(s);
-
-    for (auto itr = mykmers.begin(); itr != mykmers.end(); ++itr)
-    {
-        String mer = itr->GetString();
-        char const *s = mer.c_str();
-        hll.Add(s);
-    }
-}
-
-template <int N_LONGS>
-int Kmer<N_LONGS>::GetInferredOwner(int nprocs) const
-{
-    uint64_t myhash = GetHash();
-    double range = static_cast<double>(myhash) * static_cast<double>(nprocs);
-    size_t owner = range / std::numeric_limits<uint64_t>::max();
-    assert(owner >= 0 && owner < static_cast<int>(nprocs));
-    return static_cast<int>(owner);
-
 }
