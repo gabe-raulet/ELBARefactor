@@ -6,11 +6,15 @@
 #include "CommGrid.h"
 
 #ifndef LOWER_KMER_FREQ
-#define LOWER_KMER_FREQ 20
+#error "LOWER_KMER_FREQ must be defined"
 #endif
 
 #ifndef UPPER_KMER_FREQ
-#define UPPER_KMER_FREQ 30
+#error "UPPER_KMER_FREQ must be defined"
+#endif
+
+#if (LOWER_KMER_FREQ > UPPER_KMER_FREQ)
+#error "LOWER_KMER_FREQ must be less than or equal to UPPER_KMER_FREQ"
 #endif
 
 typedef uint16_t PosInRead;

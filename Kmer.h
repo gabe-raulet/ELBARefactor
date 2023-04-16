@@ -11,12 +11,20 @@
 #include "common.h"
 #include "HyperLogLog.h"
 
+#ifndef KMER_SIZE
+#error "KMER_SIZE must be defined"
+#endif
+
+#if (KMER_SIZE <= 0) || (KMER_SIZE >= 96) || (!(KMER_SIZE&1))
+#error "KMER_SIZE must be in the range (0,96) and must be odd"
+#endif
+
 template <int N_LONGS>
 class Kmer
 {
 public:
 
-    static_assert(N_LONGS != 0, "Error: invalid Kmer<> type instantiation. Make sure KMER_SIZE is in valid range");
+    static_assert(N_LONGS != 0);
 
     static constexpr int N_BYTES = 8 * N_LONGS;
     static inline int k = 32*N_LONGS - 1;
