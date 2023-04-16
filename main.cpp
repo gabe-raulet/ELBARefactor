@@ -21,9 +21,14 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
-        FastaIndex index(fasta_fname, commgrid);
+        if (!myrank)
+        {
+            std::cerr << "[ELBA]: -DKMER_SIZE=" << KMER_SIZE << " -DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << " -DUPPER_KMER_FREQ=" << UPPER_KMER_FREQ << " -DHLLFLAG=" << HLLFLAG << std::endl;
+        }
 
-        index.PrintInfo();
+        MPI_Barrier(commgrid->GetWorld());
+
+        FastaIndex index(fasta_fname, commgrid);
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 

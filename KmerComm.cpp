@@ -1,6 +1,7 @@
 #include "KmerComm.h"
 #include <numeric>
 #include <algorithm>
+#include <cmath>
 
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
@@ -22,14 +23,36 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * fact be the same "k-mer".
      */
 
+    size_t cardinality_estimate;
+#if HLLFLAG == 1
     HyperLogLog hll(12);
     EstimateHandler estimator(hll);
     ForeachKmer(myreads, estimator);
 
     hll.ParallelMerge(commgrid->GetWorld());
-    double estimate = hll.Estimate();
+    cardinality_estimate = static_cast<size_t>(std::ceil(hll.Estimate()));
+#else
+    static_assert(HLLFLAG == 0);
+    int64_t sums[3] = {};
+    int64_t &mycardinality = sums[0];
+    int64_t &mytotreads    = sums[1];
+    int64_t &mytotbases    = sums[2];
 
-    if (!myrank) std::cout << "Estimate a total of " << estimate << " k-mers" << std::endl;
+    mytotreads = static_cast<int64_t>(numreads);
+    mytotbases = std::accumulate(myreads.begin(), myreads.end(), 0, [](int64_t cur, const String& s) { return cur + s.size(); });
+
+    if (mytotreads > 0)
+    {
+        int64_t kmersxread = ((mytotbases + mytotreads - 1) / mytotreads) - KMER_SIZE + 1;
+        mycardinality += kmersxread * mytotreads;
+    }
+
+    MPI_Allreduce(MPI_IN_PLACE, sums, 3, MPI_INT64_T, MPI_SUM, commgrid->GetWorld());
+
+    cardinality_estimate = static_cast<size_t>(mycardinality);
+#endif
+
+    if (!myrank) std::cout << "Estimate a total of " << cardinality_estimate << " k-mers" << std::endl;
 
     Vector<Vector<TKmer>> kmerbuckets(nprocs); /* outgoing k-mer buckets */
     PackingHandler packer(kmerbuckets);
