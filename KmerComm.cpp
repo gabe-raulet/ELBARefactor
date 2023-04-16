@@ -23,6 +23,15 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * fact be the same "k-mer".
      */
 
+    HyperLogLog hll(12);
+    EstimateHandler estimator(hll);
+    ForeachKmer(myreads, estimator);
+
+    hll.ParallelMerge(commgrid->GetWorld());
+    double estimate = hll.Estimate();
+
+    if (!myrank) std::cout << "Estimate a total of " << estimate << " k-mers" << std::endl;
+
     Vector<Vector<TKmer>> kmerbuckets(nprocs); /* outgoing k-mer buckets */
     PackingHandler packer(kmerbuckets);
     ForeachKmer(myreads, packer);

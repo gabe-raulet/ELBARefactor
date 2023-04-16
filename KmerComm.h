@@ -27,16 +27,14 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 
 struct EstimateHandler
 {
-    HyperLogLog hll;
+    HyperLogLog& hll;
 
-    EstimateHandler(SharedPtr<CommGrid> commgrid) : hll(12) {}
+    EstimateHandler(HyperLogLog& hll) : hll(hll) {}
 
     void operator()(const TKmer& kmer)
     {
         hll.Add(kmer.GetString().c_str());
     }
-
-    HyperLogLog& GetHLL() { return hll; }
 };
 
 struct PackingHandler
@@ -54,8 +52,6 @@ struct PackingHandler
         assert(owner >= 0 && owner < static_cast<int>(nprocs));
         kmerbuckets[owner].push_back(kmer);
     }
-
-    // Vector<Vector<TKmer>>& GetKmerBuckets() { return kmerbuckets; }
 };
 
 template <typename KmerHandler>
