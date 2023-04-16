@@ -57,10 +57,10 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * Alltoallv communication of k-mers requires communication parameters
      * sendcnt, recvcnt, sdispls, and rdispls.
      */
-    std::vector<MPI_Count_type> sendcnt(nprocs); /* sendcnt[i] is number of bytes of k-mers this process sends to process i */
-    std::vector<MPI_Count_type> recvcnt(nprocs); /* recvnct[i] is number of bytes of k-mers this process receives from process i */
-    std::vector<MPI_Displ_type> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */
-    std::vector<MPI_Displ_type> rdispls(nprocs); /* rdispls[i] = rdispls[i-1] + recvcnt[i] */
+    Vector<MPI_Count_type> sendcnt(nprocs); /* sendcnt[i] is number of bytes of k-mers this process sends to process i */
+    Vector<MPI_Count_type> recvcnt(nprocs); /* recvnct[i] is number of bytes of k-mers this process receives from process i */
+    Vector<MPI_Displ_type> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */
+    Vector<MPI_Displ_type> rdispls(nprocs); /* rdispls[i] = rdispls[i-1] + recvcnt[i] */
 
     /*
      * Initialize sendcnt parameter for local process.
