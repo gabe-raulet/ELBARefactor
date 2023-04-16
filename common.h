@@ -47,6 +47,11 @@ typedef int MPI_Displ_type;
 
 #define MPI_ALLTOALL MPI_Alltoall
 #define MPI_ALLTOALLV MPI_Alltoallv
+#define MPI_SCATTER MPI_Scatter
+#define MPI_SCATTERV MPI_Scatterv
+#define MPI_GATHER MPI_Gather
+#define MPI_GATHERV MPI_Gatherv
+#define MPI_FILE_READ_AT_ALL MPI_File_read_at_all
 
 #elif MPI_VERSION == 4
 #define MPI_HAS_LARGE_COUNTS 1
@@ -58,6 +63,11 @@ typedef MPI_Aint MPI_Displ_type;
 
 #define MPI_ALLTOALL MPI_Alltoall_c
 #define MPI_ALLTOALLV MPI_Alltoallv_c
+#define MPI_SCATTER MPI_Scatter_c
+#define MPI_SCATTERV MPI_Scatterv_c
+#define MPI_GATHER MPI_Gather_c
+#define MPI_GATHERV MPI_Gatherv_c
+#define MPI_FILE_READ_AT_ALL MPI_File_read_at_all_c
 
 #else
 #error "MPI version should either be 3 or 4."
