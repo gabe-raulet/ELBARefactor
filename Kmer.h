@@ -16,6 +16,8 @@ class Kmer
 {
 public:
 
+    static_assert(N_LONGS != 0, "Error: invalid Kmer<> type instantiation. Make sure KMER_SIZE is in valid range");
+
     static constexpr int N_BYTES = 8 * N_LONGS;
     static inline int k = 32*N_LONGS - 1;
 
@@ -99,6 +101,13 @@ namespace std
 
 #include "Kmer.cpp"
 
-typedef Kmer<1> TKmer;
+#ifndef KMER_SIZE
+#define KMER_SIZE 31
+#endif
+
+
+using TKmer = typename std::conditional<(KMER_SIZE <= 32), Kmer<1>,
+              typename std::conditional<(KMER_SIZE <= 64), Kmer<2>,
+              typename std::conditional<(KMER_SIZE <= 96), Kmer<3>, Kmer<0>>::type>::type>::type;
 
 #endif
