@@ -53,7 +53,7 @@ KmerOps.o: KmerOps.cpp KmerOps.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-KmerComm.o: KmerComm.cpp KmerComm.h
+KmerComm.o: KmerComm.cpp KmerComm.h Bloom.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 

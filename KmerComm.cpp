@@ -1,4 +1,5 @@
 #include "KmerComm.h"
+#include "Bloom.h"
 #include <numeric>
 #include <algorithm>
 #include <iomanip>
@@ -181,6 +182,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
     kmermap.reserve(local_cardinality_estimate);
+    Bloom bm(static_cast<int64_t>(local_cardinality_estimate), 0.05);
 
     /*
      * Get actual number of k-mer seeds received.
@@ -194,9 +196,35 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
         TKmer mer(addrs2read);
         addrs2read += TKmer::N_BYTES;
 
-        if (kmermap.find(mer) == kmermap.end())
+        if (bm.Check(mer.GetBytes(), TKmer::N_BYTES))
         {
-            kmermap.insert({mer, KmerCountEntry()});
+            /*
+             * k-mer was in the bloom filter, which
+             * means it has probably been seen before and
+             * is therefore probably not unique, so we
+             * add it to the hash table if it isn't there
+             * (checking the hash table is much more expensive
+             * then the Bloom filter)
+             */
+            if (kmermap.find(mer) == kmermap.end())
+            {
+                kmermap.insert({mer, KmerCountEntry()});
+            }
+        }
+        else
+        {
+            /*
+             * k-mer wasn't in the Bloom filter, which
+             * means it definitley hasn't been seen yet. Add
+             * it to the Bloom filter, so that if it never
+             * shows up again we don't have to check the
+             * more expensive hash table for a unique k-mer.
+             * Remember that a signifncat fraction of k-mers
+             * are unique (due to read errors) so this will
+             * save significant time during the k-mer discovery
+             * phase.
+             */
+            bm.Add(mer.GetBytes(), TKmer::N_BYTES);
         }
     }
 
