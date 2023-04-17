@@ -1,0 +1,6 @@
+*.swp
+*.o
+*.fa
+*.fa.fai
+*.out
+main
