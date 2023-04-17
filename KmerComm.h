@@ -23,11 +23,13 @@ typedef uint64_t ReadId;
 typedef Array<PosInRead, UPPER_KMER_FREQ> POSITIONS;
 typedef Array<ReadId,    UPPER_KMER_FREQ> READIDS;
 
+typedef Tuple<TKmer, ReadId, PosInRead> KmerSeed;
 typedef Tuple<READIDS, POSITIONS, int> KmerCountEntry;
 typedef Map<TKmer, KmerCountEntry> KmerCountMap;
 
 KmerCountMap GetKmerCountMapKeys(const Vector<String>& myreads, SharedPtr<CommGrid> commgrid);
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid);
+int GetKmerOwner(const TKmer& kmer, int nprocs);
 
 struct KmerEstimateHandler
 {
@@ -50,11 +52,7 @@ struct KmerPartitionHandler
 
     void operator()(const TKmer& kmer)
     {
-        uint64_t myhash = kmer.GetHash();
-        double range = static_cast<double>(myhash) * static_cast<double>(nprocs);
-        size_t owner = range / std::numeric_limits<uint64_t>::max();
-        assert(owner >= 0 && owner < static_cast<int>(nprocs));
-        kmerbuckets[owner].push_back(kmer);
+        kmerbuckets[GetKmerOwner(kmer, nprocs)].push_back(kmer);
     }
 };
 

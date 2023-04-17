@@ -249,7 +249,39 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid)
 {
-    return;
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    size_t numreads = myreads.size();
+
+    Vector<KmerSeed> kmerseeds;
+
+    size_t readoffset = numreads;
+    MPI_Exscan(&numreads, &readoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+    if (!myrank) readoffset = 0;
+
+    ReadId readid = readoffset;
+
+    for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr, ++readid)
+    {
+        if (readitr->size() < KMER_SIZE)
+            continue;
+
+        Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
+
+        PosInRead pos = 0;
+
+        for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr, ++pos)
+        {
+            // if ()
+        }
+    }
 }
 
-
+int GetKmerOwner(const TKmer& kmer, int nprocs)
+{
+    uint64_t myhash = kmer.GetHash();
+    double range = static_cast<double>(myhash) * static_cast<double>(nprocs);
+    size_t owner = range / std::numeric_limits<uint64_t>::max();
+    assert(owner >= 0 && owner < static_cast<int>(nprocs));
+    return static_cast<int>(owner);
+}

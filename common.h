@@ -9,6 +9,7 @@
 #include <set>
 #include <memory>
 #include <cstdint>
+#include <limits>
 #include <mpi.h>
 
 using String = std::string;
@@ -71,6 +72,11 @@ typedef MPI_Aint MPI_Displ_type;
 
 #else
 #error "MPI version should either be 3 or 4."
+#endif
+
+#ifndef MPI_SIZE_T
+static_assert(std::numeric_limits<size_t>::max() == std::numeric_limits<unsigned long>::max());
+#define MPI_SIZE_T MPI_UNSIGNED_LONG
 #endif
 
 #endif
