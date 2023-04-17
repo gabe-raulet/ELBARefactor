@@ -182,7 +182,12 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
     kmermap.reserve(local_cardinality_estimate);
+
+#if USE_BLOOM == 1
     Bloom bm(static_cast<int64_t>(local_cardinality_estimate), 0.05);
+#else
+    static_assert(USE_BLOOM == 0);
+#endif
 
     /*
      * Get actual number of k-mer seeds received.
@@ -196,6 +201,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
         TKmer mer(addrs2read);
         addrs2read += TKmer::N_BYTES;
 
+#if USE_BLOOM == 1
         if (bm.Check(mer.GetBytes(), TKmer::N_BYTES))
         {
             /*
@@ -226,6 +232,14 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
              */
             bm.Add(mer.GetBytes(), TKmer::N_BYTES);
         }
+#else
+        static_assert(USE_BLOOM == 0);
+
+        if (kmermap.find(mer) == kmermap.end())
+        {
+            kmermap.insert({mer, KmerCountEntry()});
+        }
+#endif
     }
 
     std::cout << "Processor " << myrank << " received " << kmermap.size() << " distinct k-mers" << std::endl;

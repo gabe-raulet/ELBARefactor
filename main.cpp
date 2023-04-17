@@ -10,11 +10,13 @@
 #include "CommGrid.h"
 #include "FastaIndex.h"
 
-const String fasta_fname = "reads.fa";
+String fasta_fname = "reads.fa";
 
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);
+
+    if (argc == 2) fasta_fname.assign(argv[1]);
 
     {
         auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD));
