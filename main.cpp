@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
 
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
-        unsigned long numkmers = kmercounts.size();
-        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_UNSIGNED_LONG, MPI_SUM, commgrid->GetWorld());
+        size_t numkmers = kmercounts.size();
+        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
         if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
     }

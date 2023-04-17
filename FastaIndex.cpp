@@ -64,7 +64,7 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
     records.resize(recvcount);
 
     MPI_Datatype faidx_dtype_t;
-    MPI_Type_contiguous(3, MPI_UNSIGNED_LONG, &faidx_dtype_t);
+    MPI_Type_contiguous(3, MPI_SIZE_T, &faidx_dtype_t);
     MPI_Type_commit(&faidx_dtype_t);
     MPI_SCATTERV(root_records.data(), sendcounts.data(), displs.data(), faidx_dtype_t, records.data(), recvcount, faidx_dtype_t, 0, commgrid->GetWorld());
     MPI_Type_free(&faidx_dtype_t);
@@ -75,7 +75,7 @@ Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
     Vector<String> reads;
 
     const Vector<faidx_record_t>& records = index.getrecords();
-    unsigned long num_records = records.size();
+    size_t num_records = records.size();
 
     reads.reserve(num_records);
 
@@ -100,24 +100,24 @@ Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
     MPI_FILE_READ_AT_ALL(fh, startpos, mychunk.data(), mychunksize, MPI_CHAR, MPI_STATUS_IGNORE);
     MPI_File_close(&fh);
 
-    unsigned long maxlen, offset = 0;
+    size_t maxlen, offset = 0;
 
-    MPI_Exscan(&num_records, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, index.commgrid->GetWorld());
+    MPI_Exscan(&num_records, &offset, 1, MPI_SIZE_T, MPI_SUM, index.commgrid->GetWorld());
 
-    maxlen = std::accumulate(records.begin(), records.end(), 0, [](unsigned long l, const faidx_record_t& rec) { return l > rec.len? l : rec.len; });
+    maxlen = std::accumulate(records.begin(), records.end(), 0, [](size_t l, const faidx_record_t& rec) { return l > rec.len? l : rec.len; });
 
     char *seqbuf = new char[maxlen];
 
     for (auto itr = records.cbegin(); itr != records.cend(); ++itr)
     {
-        unsigned long locpos = 0;
-        signed long chunkpos = itr->pos - startpos;
-        signed long remain = itr->len;
+        size_t locpos = 0;
+        ptrdiff_t chunkpos = itr->pos - startpos;
+        ptrdiff_t remain = itr->len;
         char *bufptr = seqbuf;
 
         while (remain > 0)
         {
-            unsigned long cnt = std::min(itr->bases, static_cast<unsigned long>(remain));
+            size_t cnt = std::min(itr->bases, static_cast<size_t>(remain));
             std::memcpy(bufptr, &mychunk.data()[chunkpos + locpos], cnt);
             bufptr += cnt;
             remain -= cnt;
@@ -134,8 +134,8 @@ Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
 
 void FastaIndex::PrintInfo() const
 {
-    unsigned long mynumreads = records.size();
-    unsigned long mytotbases = std::accumulate(records.begin(), records.end(), 0, [](unsigned long cur, const faidx_record_t& rec) { return cur + rec.len; });
+    size_t mynumreads = records.size();
+    size_t mytotbases = std::accumulate(records.begin(), records.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
     double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
 
     std::ostringstream ss;

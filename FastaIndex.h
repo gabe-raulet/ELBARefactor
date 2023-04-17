@@ -4,7 +4,7 @@
 #include "common.h"
 #include "CommGrid.h"
 
-typedef struct faidx_record { unsigned long len, pos, bases; } faidx_record_t;
+typedef struct faidx_record { size_t len, pos, bases; } faidx_record_t;
 
 class FastaIndex
 {
