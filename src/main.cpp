@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
         GetKmerCountMapValues(myreads, kmercounts, commgrid);
 
         auto itr = kmercounts.begin();
+
         while (itr != kmercounts.end())
         {
             if (std::get<2>(itr->second) < LOWER_KMER_FREQ)
@@ -52,7 +53,21 @@ int main(int argc, char *argv[])
             }
         }
 
-        PrintKmerHistogram(kmercounts, commgrid);
+        // PrintKmerHistogram(kmercounts, commgrid);
+
+        Vector<size_t> totkmers(nprocs);
+        totkmers[myrank] = kmercounts.size();
+
+        MPI_Allgather(MPI_IN_PLACE, 1, MPI_SIZE_T, totkmers.data(), 1, MPI_SIZE_T, commgrid->GetWorld());
+
+        size_t kmerid = 0;
+
+        for (int i = 1; i <= myrank; ++i)
+        {
+            kmerid += totkmers[myrank-i];
+        }
+
+        std::cout << myrank << " " << kmerid << std::endl;
     }
 
     MPI_Finalize();
