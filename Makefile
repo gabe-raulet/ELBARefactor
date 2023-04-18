@@ -23,33 +23,17 @@ all: elba
 elba: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o
 	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
 
+%.o: src/%.cpp
+	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
+	@$(COMPILER) $(FLAGS) -c -o $@ $<
+
 main.o: src/main.cpp inc/CommGrid.h src/Kmer.cpp inc/Kmer.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 CommGrid.o: src/CommGrid.cpp inc/CommGrid.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h inc/CommGrid.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 HyperLogLog.o: src/HyperLogLog.cpp inc/HyperLogLog.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 HashFuncs.o: src/HashFuncs.cpp inc/HashFuncs.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 KmerComm.o: src/KmerComm.cpp inc/KmerComm.h inc/Bloom.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
 Bloom.o: src/Bloom.cpp inc/Bloom.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
 clean:
 	rm -rf *.o *.dSYM *.out
