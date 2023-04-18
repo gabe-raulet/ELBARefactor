@@ -11,6 +11,9 @@
 #include <cstdint>
 #include <limits>
 #include <mpi.h>
+#include "CombBLAS/CombBLAS.h"
+
+using namespace combblas;
 
 using String = std::string;
 

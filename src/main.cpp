@@ -8,7 +8,6 @@
 #include "common.h"
 #include "Kmer.h"
 #include "KmerComm.h"
-#include "CommGrid.h"
 #include "FastaIndex.h"
 
 String fasta_fname = "data/reads.fa";
@@ -22,7 +21,7 @@ int main(int argc, char *argv[])
     if (argc == 2) fasta_fname.assign(argv[1]);
 
     {
-        auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD));
+        auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD, 0, 0));
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 

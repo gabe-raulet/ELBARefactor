@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "Kmer.h"
-#include "CommGrid.h"
 
 #ifndef LOWER_KMER_FREQ
 #error "LOWER_KMER_FREQ must be defined"

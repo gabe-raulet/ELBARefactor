@@ -2,7 +2,6 @@
 #define FASTA_INDEX_H_
 
 #include "common.h"
-#include "CommGrid.h"
 
 typedef struct faidx_record { size_t len, pos, bases; } faidx_record_t;
 
