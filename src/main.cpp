@@ -48,6 +48,12 @@ int main(int argc, char *argv[])
         // PrintKmerHistogram(kmercounts, commgrid);
 
         uint64_t kmerid = kmercounts.size();
+        uint64_t totkmers = kmerid;
+        uint64_t totreads = myreads.size();
+
+        MPI_Allreduce(&kmerid,      &totkmers, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
+        MPI_Allreduce(MPI_IN_PLACE, &totreads, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
+
         MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
         if (myrank == 0) kmerid = 0;
 
@@ -68,6 +74,14 @@ int main(int argc, char *argv[])
                 local_positions.push_back(positions[j]);
             }
         }
+
+        FullyDistVec<uint64_t, uint64_t> drows(local_rowids, commgrid);
+        FullyDistVec<uint64_t, uint64_t> dcols(local_colids, commgrid);
+        FullyDistVec<uint64_t, PosInRead> dvals(local_positions, commgrid);
+
+        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> A(totreads, totkmers, drows, dcols, dvals, false);
+
+        A.ParallelWriteMM("kmers.mtx", false);
     }
 
     MPI_Finalize();
