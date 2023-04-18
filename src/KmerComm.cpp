@@ -364,7 +364,10 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
         int& count            = std::get<2>(entry);
 
         if (count >= UPPER_KMER_FREQ) /* TODO: There is probably a more efficient solution: deleting k-mer from kmermap (?) */
+        {
+            kmermap.erase(kmer);
             continue;
+        }
 
         readids[count] = readid;
         positions[count] = pos;
