@@ -48,12 +48,27 @@ int main(int argc, char *argv[])
 
         // PrintKmerHistogram(kmercounts, commgrid);
 
-        size_t kmerid = kmercounts.size();
-        MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+        uint64_t kmerid = kmercounts.size();
+        MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
         if (myrank == 0) kmerid = 0;
 
-        std::cout << myrank << " " << kmerid << std::endl;
+        /* TODO: try reserving memory here before later push backs */
+        Vector<uint64_t> local_rowids, local_colids;
+        Vector<PosInRead> local_positions;
 
+        for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
+        {
+            READIDS& readids = std::get<0>(itr->second);
+            POSITIONS& positions = std::get<1>(itr->second);
+            int cnt = std::get<2>(itr->second);
+
+            for (int j = 0; j < cnt; ++j)
+            {
+                local_colids.push_back(kmerid++);
+                local_rowids.push_back(readids[j]);
+                local_positions.push_back(positions[j]);
+            }
+        }
     }
 
     MPI_Finalize();
