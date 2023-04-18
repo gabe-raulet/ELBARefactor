@@ -1,5 +1,6 @@
 #include "KmerComm.h"
 #include "Bloom.h"
+#include <cstring>
 #include <numeric>
 #include <algorithm>
 #include <iomanip>
@@ -214,7 +215,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
              */
             if (kmermap.find(mer) == kmermap.end())
             {
-                kmermap.insert({mer, KmerCountEntry()});
+                kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
             }
         }
         else
@@ -237,7 +238,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
         if (kmermap.find(mer) == kmermap.end())
         {
-            kmermap.insert({mer, KmerCountEntry()});
+            kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
         }
 #endif
     }
@@ -253,7 +254,7 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     int nprocs = commgrid->GetSize();
     size_t numreads = myreads.size();
 
-    Vector<KmerSeed> kmerseeds;
+    Vector<Vector<KmerSeed>> kmerseeds(nprocs);
 
     size_t readoffset = numreads;
     MPI_Exscan(&numreads, &readoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
@@ -272,8 +273,89 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 
         for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr, ++pos)
         {
-            // if ()
+            int owner = GetKmerOwner(*meritr, nprocs);
+            kmerseeds[owner].emplace_back(*meritr, readid, pos);
         }
+    }
+
+    Vector<MPI_Count_type> sendcnt(nprocs);
+    Vector<MPI_Count_type> recvcnt(nprocs);
+    Vector<MPI_Displ_type> sdispls(nprocs);
+    Vector<MPI_Displ_type> rdispls(nprocs);
+
+    constexpr size_t seedbytes = TKmer::N_BYTES + sizeof(ReadId) + sizeof(PosInRead);
+
+    for (int i = 0; i < nprocs; ++i)
+    {
+        sendcnt[i] = kmerseeds[i].size() * seedbytes;
+    }
+
+    MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
+
+    sdispls.front() = rdispls.front() = 0;
+
+    std::partial_sum(sendcnt.begin(), sendcnt.end()-1, sdispls.begin()+1);
+    std::partial_sum(recvcnt.begin(), recvcnt.end()-1, rdispls.begin()+1);
+
+    size_t totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
+    size_t totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
+
+    Vector<uint8_t> sendbuf(totsend, 0);
+
+    for (int i = 0; i < nprocs; ++i)
+    {
+        assert(kmerseeds[i].size() == (sendcnt[i] / seedbytes));
+
+        uint8_t *addrs2fill = sendbuf.data() + sdispls[i];
+
+        for (MPI_Count_type j = 0; j < kmerseeds[i].size(); ++j)
+        {
+            auto& seeditr = kmerseeds[i][j];
+            TKmer kmer = std::get<0>(seeditr);
+            ReadId readid = std::get<1>(seeditr);
+            PosInRead pos = std::get<2>(seeditr);
+            memcpy(addrs2fill, kmer.GetBytes(), TKmer::N_BYTES);
+            memcpy(addrs2fill + TKmer::N_BYTES, &readid, sizeof(ReadId));
+            memcpy(addrs2fill + TKmer::N_BYTES + sizeof(ReadId), &pos, sizeof(PosInRead));
+            addrs2fill += seedbytes;
+        }
+
+        kmerseeds[i].clear();
+    }
+
+    Vector<uint8_t> recvbuf(totrecv, 0);
+
+    MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
+
+    size_t numkmerseeds = totrecv / seedbytes;
+
+    uint8_t *addrs2read = recvbuf.data();
+
+    for (size_t i = 0; i < numkmerseeds; ++i)
+    {
+        TKmer kmer(addrs2read);
+        ReadId readid = *((ReadId*)(addrs2read + TKmer::N_BYTES));
+        PosInRead pos = *((PosInRead*)(addrs2read + TKmer::N_BYTES + sizeof(ReadId)));
+        addrs2read += seedbytes;
+
+        auto kmitr = kmermap.find(kmer);
+
+        if (kmitr == kmermap.end())
+            continue;
+
+        KmerCountEntry& entry = kmitr->second;
+
+        READIDS& readids      = std::get<0>(entry);
+        POSITIONS& positions  = std::get<1>(entry);
+        int& count            = std::get<2>(entry);
+
+        if (count >= UPPER_KMER_FREQ) /* TODO: There is probably a more efficient solution: deleting k-mer from kmermap (?) */
+            continue;
+
+        readids[count] = readid;
+        positions[count] = pos;
+
+        count++;
     }
 }
 

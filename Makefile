@@ -63,4 +63,4 @@ Bloom.o: Bloom.cpp Bloom.h
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
 clean:
-	rm -rf main *.o *.dSYM *.out
+	rm -rf *.o *.dSYM *.out
