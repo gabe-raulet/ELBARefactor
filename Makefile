@@ -7,7 +7,8 @@ MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 MPICH_FLAGS=
-FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -std=c++17 -I./inc -I./src -I./combblas-install/include
+FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -std=c++17 -I./inc -I./src -I./combblas-install/include
+FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -Wno-deprecated -std=c++17 -I./inc -I./src -I./combblas-install/include
 CBLASLIB=./combblas-install/lib/libCombBLAS.a
 UNAME_S:=$(shell uname -s)
 
