@@ -39,6 +39,19 @@ int main(int argc, char *argv[])
 
         GetKmerCountMapValues(myreads, kmercounts, commgrid);
 
+        auto itr = kmercounts.begin();
+        while (itr != kmercounts.end())
+        {
+            if (std::get<2>(itr->second) < LOWER_KMER_FREQ)
+            {
+                itr = kmercounts.erase(itr);
+            }
+            else
+            {
+                itr++;
+            }
+        }
+
         PrintKmerHistogram(kmercounts, commgrid);
     }
 
