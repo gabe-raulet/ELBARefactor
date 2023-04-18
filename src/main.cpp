@@ -43,31 +43,17 @@ int main(int argc, char *argv[])
 
         while (itr != kmercounts.end())
         {
-            if (std::get<2>(itr->second) < LOWER_KMER_FREQ)
-            {
-                itr = kmercounts.erase(itr);
-            }
-            else
-            {
-                itr++;
-            }
+            itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmercounts.erase(itr) : ++itr;
         }
 
         // PrintKmerHistogram(kmercounts, commgrid);
 
-        Vector<size_t> totkmers(nprocs);
-        totkmers[myrank] = kmercounts.size();
-
-        MPI_Allgather(MPI_IN_PLACE, 1, MPI_SIZE_T, totkmers.data(), 1, MPI_SIZE_T, commgrid->GetWorld());
-
-        size_t kmerid = 0;
-
-        for (int i = 1; i <= myrank; ++i)
-        {
-            kmerid += totkmers[myrank-i];
-        }
+        size_t kmerid = kmercounts.size();
+        MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+        if (myrank == 0) kmerid = 0;
 
         std::cout << myrank << " " << kmerid << std::endl;
+
     }
 
     MPI_Finalize();
