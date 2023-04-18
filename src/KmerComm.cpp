@@ -6,6 +6,12 @@
 #include <iomanip>
 #include <cmath>
 
+#if USE_BLOOM == 1
+static Bloom *bm = nullptr;
+#else
+static_assert(USE_BLOOM == 0);
+#endif
+
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
     /*
@@ -185,7 +191,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     kmermap.reserve(local_cardinality_estimate);
 
 #if USE_BLOOM == 1
-    Bloom bm(static_cast<int64_t>(local_cardinality_estimate), 0.05);
+    bm = new Bloom(static_cast<int64_t>(local_cardinality_estimate), 0.05);
 #else
     static_assert(USE_BLOOM == 0);
 #endif
@@ -203,7 +209,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
         addrs2read += TKmer::N_BYTES;
 
 #if USE_BLOOM == 1
-        if (bm.Check(mer.GetBytes(), TKmer::N_BYTES))
+        if (bm->Check(mer.GetBytes(), TKmer::N_BYTES))
         {
             /*
              * k-mer was in the bloom filter, which
@@ -231,7 +237,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
              * save significant time during the k-mer discovery
              * phase.
              */
-            bm.Add(mer.GetBytes(), TKmer::N_BYTES);
+            bm->Add(mer.GetBytes(), TKmer::N_BYTES);
         }
 #else
         static_assert(USE_BLOOM == 0);
@@ -334,6 +340,14 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     for (size_t i = 0; i < numkmerseeds; ++i)
     {
         TKmer kmer(addrs2read);
+
+#if USE_BLOOM == 1
+        if (!bm->Check(kmer.GetBytes(), TKmer::N_BYTES))
+            continue;
+#else
+        static_assert(USE_BLOOM == 0);
+#endif
+
         ReadId readid = *((ReadId*)(addrs2read + TKmer::N_BYTES));
         PosInRead pos = *((PosInRead*)(addrs2read + TKmer::N_BYTES + sizeof(ReadId)));
         addrs2read += seedbytes;
@@ -357,6 +371,12 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 
         count++;
     }
+
+#if USE_BLOOM == 1
+    delete bm;
+#else
+    static_assert(USE_BLOOM == 0);
+#endif
 }
 
 int GetKmerOwner(const TKmer& kmer, int nprocs)

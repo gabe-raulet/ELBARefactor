@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
-        assert(nprocs == 1);
+        // assert(nprocs == 1);
 
         FastaIndex index(fasta_fname, commgrid);
 
@@ -41,6 +41,8 @@ int main(int argc, char *argv[])
 
         int maxcount = std::accumulate(kmercounts.begin(), kmercounts.end(), 0, [](int cur, const auto& entry) { return std::max(cur, std::get<2>(entry.second)); });
 
+        MPI_Allreduce(MPI_IN_PLACE, &maxcount, 1, MPI_INT, MPI_MAX, commgrid->GetWorld());
+
         Vector<int> histo(maxcount+1, 0);
 
         for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
@@ -50,13 +52,18 @@ int main(int argc, char *argv[])
             histo[cnt]++;
         }
 
-        std::cout << "#count\tnumkmers" << std::endl;
+        MPI_Allreduce(MPI_IN_PLACE, histo.data(), maxcount+1, MPI_INT, MPI_SUM, commgrid->GetWorld());
 
-        for (int i = 1; i < histo.size(); ++i)
+        if (!myrank)
         {
-            if (histo[i] > 0)
+            std::cout << "#count\tnumkmers" << std::endl;
+
+            for (int i = 1; i < histo.size(); ++i)
             {
-                std::cout << i << "\t" << histo[i] << std::endl;
+                if (histo[i] > 0)
+                {
+                    std::cout << i << "\t" << histo[i] << std::endl;
+                }
             }
         }
     }
