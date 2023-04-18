@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstdint>
 #include <cassert>
+#include <numeric>
 #include <mpi.h>
 #include "common.h"
 #include "Kmer.h"
@@ -23,6 +24,8 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
+        assert(nprocs == 1);
+
         FastaIndex index(fasta_fname, commgrid);
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
@@ -35,6 +38,27 @@ int main(int argc, char *argv[])
         if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
 
         GetKmerCountMapValues(myreads, kmercounts, commgrid);
+
+        int maxcount = std::accumulate(kmercounts.begin(), kmercounts.end(), 0, [](int cur, const auto& entry) { return std::max(cur, std::get<2>(entry.second)); });
+
+        Vector<int> histo(maxcount+1, 0);
+
+        for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
+        {
+            int cnt = std::get<2>(itr->second);
+            assert(cnt >= 1);
+            histo[cnt]++;
+        }
+
+        std::cout << "#count\tnumkmers" << std::endl;
+
+        for (int i = 1; i < histo.size(); ++i)
+        {
+            if (histo[i] > 0)
+            {
+                std::cout << i << "\t" << histo[i] << std::endl;
+            }
+        }
     }
 
     MPI_Finalize();
