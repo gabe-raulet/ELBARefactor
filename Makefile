@@ -7,7 +7,7 @@ MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 MPICH_FLAGS=
-FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -std=c++17
+FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -std=c++17 -I./inc -I./src
 UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Linux)
@@ -18,47 +18,36 @@ FLAGS+=$(MPICH_INC)
 MPICH_FLAGS+=$(MPICH_LIB) -L/usr/local/opt/libevent/lib -lmpi
 endif
 
-all: main
+all: elba
 
-main: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o
+elba: main.o CommGrid.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o
 	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
 
-test: test.o
-	$(COMPILER) -o $@ $^ $(FLAGS) $(MPICH_FLAGS) -lz
-
-main.o: main.cpp CommGrid.h Kmer.cpp Kmer.h
+main.o: src/main.cpp inc/CommGrid.h src/Kmer.cpp inc/Kmer.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-test.o: test.cpp
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	$(COMPILER) $(FLAGS) -c -o $@ $<
-
-CommGrid.o: CommGrid.cpp CommGrid.h
+CommGrid.o: src/CommGrid.cpp inc/CommGrid.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-FastaIndex.o: FastaIndex.cpp FastaIndex.h CommGrid.h
+FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h inc/CommGrid.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-HyperLogLog.o: HyperLogLog.cpp HyperLogLog.h
+HyperLogLog.o: src/HyperLogLog.cpp inc/HyperLogLog.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-HashFuncs.o: HashFuncs.cpp HashFuncs.h
+HashFuncs.o: src/HashFuncs.cpp inc/HashFuncs.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-KmerOps.o: KmerOps.cpp KmerOps.h
+KmerComm.o: src/KmerComm.cpp inc/KmerComm.h inc/Bloom.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
-KmerComm.o: KmerComm.cpp KmerComm.h Bloom.h
-	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
-
-Bloom.o: Bloom.cpp Bloom.h
+Bloom.o: src/Bloom.cpp inc/Bloom.h
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) -c -o $@ $<
 
