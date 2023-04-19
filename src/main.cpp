@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
 
         Vector<String> myreads = FastaIndex::GetMyReads(index);
 
+        /* TODO: <<<<<<< BELOW */
+        (void)0;
+        /* TODO: ======= REPLACES */
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
         size_t numkmers = kmercounts.size();
@@ -46,6 +49,7 @@ int main(int argc, char *argv[])
         {
             itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmercounts.erase(itr) : ++itr;
         }
+        /* TODO: >>>>>>> ABOVE */
 
         PrintKmerHistogram(kmercounts, commgrid);
 
