@@ -9,6 +9,8 @@
 #include "Kmer.h"
 #include "KmerComm.h"
 #include "FastaIndex.h"
+#include "ReadOverlap.h"
+#include "KmerIntersect.h"
 
 String fasta_fname = "data/reads.fa";
 
@@ -79,9 +81,14 @@ int main(int argc, char *argv[])
         FullyDistVec<uint64_t, uint64_t> dcols(local_colids, commgrid);
         FullyDistVec<uint64_t, PosInRead> dvals(local_positions, commgrid);
 
-        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> A(totreads, totkmers, drows, dcols, dvals, false);
+        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> A(totreads, totkmers, drows, dcols, dvals, true);
+        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> AT = A;
+        AT.Transpose();
 
-        A.ParallelWriteMM("kmers.mtx", false);
+        A.ParallelWriteMM("A.mtx", false);
+        AT.ParallelWriteMM("AT.mtx", false);
+
+        SpParMat<uint64_t, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>> B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>>(A, AT);
     }
 
     MPI_Finalize();

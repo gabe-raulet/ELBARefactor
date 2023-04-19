@@ -7,7 +7,6 @@ MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 MPICH_FLAGS=
-FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -std=c++17 -I./inc -I./src -I./combblas-install/include
 FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -Wno-deprecated -std=c++17 -I./inc -I./src -I./combblas-install/include
 CBLASLIB=./combblas-install/lib/libCombBLAS.a
 UNAME_S:=$(shell uname -s)
@@ -22,7 +21,7 @@ endif
 
 all: elba
 
-elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o
+elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o
 	$(COMPILER) -o $@ $^ $(CBLASLIB) $(FLAGS) $(MPICH_FLAGS) -lz
 
 %.o: src/%.cpp
@@ -35,6 +34,7 @@ HyperLogLog.o: src/HyperLogLog.cpp inc/HyperLogLog.h
 HashFuncs.o: src/HashFuncs.cpp inc/HashFuncs.h
 KmerComm.o: src/KmerComm.cpp inc/KmerComm.h inc/Bloom.h
 Bloom.o: src/Bloom.cpp inc/Bloom.h
+ReadOverlap.o: src/ReadOverlap.cpp inc/ReadOverlap.h
 
 clean:
 	rm -rf *.o *.dSYM *.out
