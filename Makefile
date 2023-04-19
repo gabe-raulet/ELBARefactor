@@ -27,7 +27,8 @@ endif
 all: elba
 
 elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o CommGrid.o MPIType.o
-	$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
+	@echo CXX -c -o $@ $^
+	@$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
 
 %.o: src/%.cpp
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
@@ -42,10 +43,12 @@ Bloom.o: src/Bloom.cpp inc/Bloom.h
 ReadOverlap.o: src/ReadOverlap.cpp inc/ReadOverlap.h
 
 CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h
-	$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
+	@echo CXX -c -o $@ $<
+	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
 MPIType.o: $(COMBBLAS_SRC)/MPIType.cpp $(COMBBLAS_INC)/MPIType.h
-	$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
+	@echo CXX -c -o $@ $<
+	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
 clean:
 	rm -rf *.o *.dSYM *.out

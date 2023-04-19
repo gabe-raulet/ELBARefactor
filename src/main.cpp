@@ -16,15 +16,6 @@ String fasta_fname = "data/reads.fa";
 
 void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid);
 
-struct OverlapHandler
-{
-    template <typename c, typename t>
-    void save(std::basic_ostream<c,t>& os, const ReadOverlap& o, uint64_t row, uint64_t col)
-    {
-        os << o;
-    }
-};
-
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);

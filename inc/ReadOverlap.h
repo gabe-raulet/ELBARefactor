@@ -2,6 +2,7 @@
 #define READ_OVERLAP_H_
 
 #include "KmerComm.h"
+#include <iostream>
 
 struct ReadOverlap
 {
@@ -35,6 +36,15 @@ struct ReadOverlap
     {
         os << o.begQs[0] << "\t" << o.begTs[0] << "\t" << o.begQs[1] << "\t" << o.begTs[1];
         return os;
+    }
+};
+
+struct OverlapHandler
+{
+    template <typename c, typename t>
+    void save(std::basic_ostream<c,t>& os, const ReadOverlap& o, uint64_t row, uint64_t col)
+    {
+        os << o;
     }
 };
 
