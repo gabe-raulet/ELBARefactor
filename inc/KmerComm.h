@@ -36,7 +36,7 @@ struct KmerEstimateHandler
 
     KmerEstimateHandler(HyperLogLog& hll) : hll(hll) {}
 
-    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
+    void operator()(const TKmer& kmer, size_t kid, size_t rid)
     {
         hll.Add(kmer.GetString().c_str());
     }
@@ -49,7 +49,7 @@ struct KmerPartitionHandler
 
     KmerPartitionHandler(Vector<Vector<TKmer>>& kmerbuckets) : nprocs(kmerbuckets.size()), kmerbuckets(kmerbuckets) {}
 
-    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
+    void operator()(const TKmer& kmer, size_t kid, size_t rid)
     {
         kmerbuckets[GetKmerOwner(kmer, nprocs)].push_back(kmer);
     }
@@ -63,9 +63,9 @@ struct KmerParserHandler
 
     KmerParserHandler(Vector<Vector<KmerSeed>>& kmerseeds, ReadId readoffset) : nprocs(kmerseeds.size()), readoffset(readoffset), kmerseeds(kmerseeds) {}
 
-    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
+    void operator()(const TKmer& kmer, size_t kid, size_t rid)
     {
-        kmerseeds[GetKmerOwner(kmer, nprocs)].emplace_back(kmer, static_cast<ReadId>(rid + readoffset), static_cast<PosInRead>(kid));
+        kmerseeds[GetKmerOwner(kmer, nprocs)].emplace_back(kmer, static_cast<ReadId>(rid) + readoffset, static_cast<PosInRead>(kid));
     }
 
 };
@@ -73,7 +73,7 @@ struct KmerParserHandler
 template <typename KmerHandler>
 void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
 {
-    size_t i = 0, j = 0;
+    size_t i = 0;
     /*
      * Go through each local read.
      */
@@ -90,12 +90,14 @@ void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
          */
         Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
 
+        size_t j = 0;
+
         /*
          * Go through each k-mer seed.
          */
         for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr, ++j)
         {
-            handler(*meritr, *readitr, j, i);
+            handler(*meritr, j, i);
         }
     }
 }

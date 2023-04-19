@@ -266,7 +266,7 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     MPI_Exscan(&numreads, &readoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
     if (!myrank) readoffset = 0;
 
-    KmerParserHandler parser(kmerseeds, readoffset);
+    KmerParserHandler parser(kmerseeds, static_cast<ReadId>(readoffset));
     ForeachKmer(myreads, parser);
 
     // for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr, ++readid)
