@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
 
         SpParMat<uint64_t, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>> B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>>(A, AT);
 
+        B.Prune([](const auto& item) { return item.count <= 1; }); /* prune overlaps that had less than 2 common k-mer seeds */
+
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
     }
 
