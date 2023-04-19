@@ -36,7 +36,7 @@ struct KmerEstimateHandler
 
     KmerEstimateHandler(HyperLogLog& hll) : hll(hll) {}
 
-    void operator()(const TKmer& kmer)
+    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
     {
         hll.Add(kmer.GetString().c_str());
     }
@@ -49,19 +49,35 @@ struct KmerPartitionHandler
 
     KmerPartitionHandler(Vector<Vector<TKmer>>& kmerbuckets) : nprocs(kmerbuckets.size()), kmerbuckets(kmerbuckets) {}
 
-    void operator()(const TKmer& kmer)
+    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
     {
         kmerbuckets[GetKmerOwner(kmer, nprocs)].push_back(kmer);
     }
 };
 
+struct KmerParserHandler
+{
+    int nprocs;
+    ReadId readoffset;
+    Vector<Vector<KmerSeed>>& kmerseeds;
+
+    KmerParserHandler(Vector<Vector<KmerSeed>>& kmerseeds, ReadId readoffset) : nprocs(kmerseeds.size()), readoffset(readoffset), kmerseeds(kmerseeds) {}
+
+    void operator()(const TKmer& kmer, const String& myread, size_t kid, size_t rid)
+    {
+        kmerseeds[GetKmerOwner(kmer, nprocs)].emplace_back(kmer, static_cast<ReadId>(rid + readoffset), static_cast<PosInRead>(kid));
+    }
+
+};
+
 template <typename KmerHandler>
 void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
 {
+    size_t i = 0, j = 0;
     /*
      * Go through each local read.
      */
-    for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr)
+    for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr, ++i)
     {
         /*
          * If it is too small then continue to the next one.
@@ -77,9 +93,9 @@ void ForeachKmer(const Vector<String>& myreads, KmerHandler& handler)
         /*
          * Go through each k-mer seed.
          */
-        for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr)
+        for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr, ++j)
         {
-            handler(*meritr);
+            handler(*meritr, *readitr, j, i);
         }
     }
 }
