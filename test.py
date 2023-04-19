@@ -38,24 +38,27 @@ seqs, namemap, namelist = read_fasta("data/reads.fa")
 correct = 0
 incorrect = 0
 
-for line in open("B.mtx", "r"):
-    tokens = tuple(int(v) for v in line.rstrip().split())
-    idxQ = tokens[0]
-    idxT = tokens[1]
-    if idxQ == idxT: continue
-    seqQ = seqs[idxQ]
-    seqT = seqs[idxT]
-    begQs = (tokens[2], tokens[4])
-    begTs = (tokens[3], tokens[5])
-    seedQs = tuple(seqQ[b:b+31] for b in begQs)
-    seedTs = tuple(seqT[b:b+31] for b in begTs)
+with open("B.mtx", "r") as f:
+    next(f)
+    next(f)
+    for line in f.readlines():
+        tokens = tuple(int(v) for v in line.rstrip().split())
+        idxQ = tokens[0]
+        idxT = tokens[1]
+        if idxQ == idxT: continue
+        seqQ = seqs[idxQ]
+        seqT = seqs[idxT]
+        begQs = (tokens[2], tokens[4])
+        begTs = (tokens[3], tokens[5])
+        seedQs = tuple(seqQ[b:b+31] for b in begQs)
+        seedTs = tuple(seqT[b:b+31] for b in begTs)
 
-    if seedQs[0] != seedTs[0] and seedQs[0] != revcomp(seedTs[0]): incorrect += 1
-    else: correct += 1
-        #  sys.stdout.write("{}\t{}\t{}\t{}\tno_match\n".format(idxQ, idxT, begQs[0], begTs[0]))
+        if seedQs[0] != seedTs[0] and seedQs[0] != revcomp(seedTs[0]): incorrect += 1
+        else: correct += 1
+            #  sys.stdout.write("{}\t{}\t{}\t{}\tno_match\n".format(idxQ, idxT, begQs[0], begTs[0]))
 
-    if seedQs[1] != seedTs[1] and seedQs[1] != revcomp(seedTs[1]): incorrect += 1
-    else: correct += 1
-        #  sys.stdout.write("{}\t{}\t{}\t{}\tno_match\n".format(idxQ, idxT, begQs[1], begTs[1]))
+        if seedQs[1] != seedTs[1] and seedQs[1] != revcomp(seedTs[1]): incorrect += 1
+        else: correct += 1
+            #  sys.stdout.write("{}\t{}\t{}\t{}\tno_match\n".format(idxQ, idxT, begQs[1], begTs[1]))
 
 print("{} {}\n".format(correct, incorrect))
