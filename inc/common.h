@@ -82,4 +82,12 @@ static_assert(std::numeric_limits<size_t>::max() == std::numeric_limits<unsigned
 #define MPI_SIZE_T MPI_UNSIGNED_LONG
 #endif
 
+template <class NT>
+struct CT
+{
+    typedef SpDCCols<uint64_t, NT> PSpDCCols;
+    typedef SpParMat<uint64_t, NT, PSpDCCols> PSpParMat;
+    typedef FullyDistVec<uint64_t, NT> PDistVec;
+};
+
 #endif

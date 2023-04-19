@@ -3,4 +3,6 @@
 *.fa
 *.fa.fai
 *.out
+CombBLAS
 main
+elba

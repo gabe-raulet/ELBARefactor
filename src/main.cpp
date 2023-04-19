@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
             itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmercounts.erase(itr) : ++itr;
         }
 
-        // PrintKmerHistogram(kmercounts, commgrid);
+        PrintKmerHistogram(kmercounts, commgrid);
 
         uint64_t kmerid = kmercounts.size();
         uint64_t totkmers = kmerid;
@@ -79,18 +79,16 @@ int main(int argc, char *argv[])
             kmerid++;
         }
 
-        FullyDistVec<uint64_t, uint64_t> drows(local_rowids, commgrid);
-        FullyDistVec<uint64_t, uint64_t> dcols(local_colids, commgrid);
-        FullyDistVec<uint64_t, PosInRead> dvals(local_positions, commgrid);
+        CT<uint64_t>::PDistVec drows(local_rowids, commgrid);
+        CT<uint64_t>::PDistVec dcols(local_colids, commgrid);
+        CT<PosInRead>::PDistVec dvals(local_positions, commgrid);
 
-        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> A(totreads, totkmers, drows, dcols, dvals, true);
-        SpParMat<uint64_t, PosInRead, SpDCCols<uint64_t, PosInRead>> AT = A;
+        CT<PosInRead>::PSpParMat A(totreads, totkmers, drows, dcols, dvals, true);
+
+        auto AT = A;
         AT.Transpose();
 
-        A.ParallelWriteMM("A.mtx", false);
-        AT.ParallelWriteMM("AT.mtx", false);
-
-        SpParMat<uint64_t, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>> B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>>(A, AT);
+        CT<ReadOverlap>::PSpParMat B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, CT<ReadOverlap>::PSpDCCols>(A, AT);
 
         B.Prune([](const auto& item) { return item.count <= 1; }); /* prune overlaps that had less than 2 common k-mer seeds */
 
