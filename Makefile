@@ -7,8 +7,13 @@ MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
 MPICH_FLAGS=
-FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -Wno-deprecated -std=c++17 -I./inc -I./src -I./combblas-install/include
-CBLASLIB=./combblas-install/lib/libCombBLAS.a
+FLAGS=$(COMPILE_TIME_PARAMETERS) -O2 -Wno-maybe-uninitialized -Wno-deprecated -std=c++17 -I./inc -I./src
+
+COMBBLAS=./CombBLAS
+COMBBLAS_INC=$(COMBBLAS)/include/CombBLAS
+COMBBLAS_SRC=$(COMBBLAS)/src
+INCADD=-I$(COMBBLAS)/include/ -I$(COMBBLAS)/psort-1.0/include/ -I$(COMBBLAS)/usort/include/ -I$(COMBBLAS)/graph500-1.2/generator/include/
+
 UNAME_S:=$(shell uname -s)
 
 ifeq ($(UNAME_S),Linux)
@@ -21,12 +26,12 @@ endif
 
 all: elba
 
-elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o
-	$(COMPILER) -o $@ $^ $(CBLASLIB) $(FLAGS) $(MPICH_FLAGS) -lz
+elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o CommGrid.o MPIType.o
+	$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
 
 %.o: src/%.cpp
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
-	@$(COMPILER) $(FLAGS) -c -o $@ $<
+	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
 main.o: src/main.cpp src/Kmer.cpp inc/Kmer.h
 FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h
@@ -36,5 +41,14 @@ KmerComm.o: src/KmerComm.cpp inc/KmerComm.h inc/Bloom.h
 Bloom.o: src/Bloom.cpp inc/Bloom.h
 ReadOverlap.o: src/ReadOverlap.cpp inc/ReadOverlap.h
 
+CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h
+	$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
+
+MPIType.o: $(COMBBLAS_SRC)/MPIType.cpp $(COMBBLAS_INC)/MPIType.h
+	$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
+
 clean:
 	rm -rf *.o *.dSYM *.out
+
+gitclean: clean
+	git clean -f
