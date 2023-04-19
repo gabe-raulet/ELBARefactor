@@ -269,22 +269,6 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     KmerParserHandler parser(kmerseeds, static_cast<ReadId>(readoffset));
     ForeachKmer(myreads, parser);
 
-    // for (auto readitr = myreads.begin(); readitr != myreads.end(); ++readitr, ++readid)
-    // {
-        // if (readitr->size() < KMER_SIZE)
-            // continue;
-
-        // Vector<TKmer> repmers = TKmer::GetRepKmers(*readitr);
-
-        // PosInRead pos = 0;
-
-        // for (auto meritr = repmers.begin(); meritr != repmers.end(); ++meritr, ++pos)
-        // {
-            // int owner = GetKmerOwner(*meritr, nprocs);
-            // kmerseeds[owner].emplace_back(*meritr, readid, pos);
-        // }
-    // }
-
     Vector<MPI_Count_type> sendcnt(nprocs);
     Vector<MPI_Count_type> recvcnt(nprocs);
     Vector<MPI_Displ_type> sdispls(nprocs);
