@@ -16,6 +16,15 @@ String fasta_fname = "data/reads.fa";
 
 void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid);
 
+struct OverlapHandler
+{
+    template <typename c, typename t>
+    void save(std::basic_ostream<c,t>& os, const ReadOverlap& o, uint64_t row, uint64_t col)
+    {
+        os << o;
+    }
+};
+
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);
@@ -71,10 +80,12 @@ int main(int argc, char *argv[])
 
             for (int j = 0; j < cnt; ++j)
             {
-                local_colids.push_back(kmerid++);
+                local_colids.push_back(kmerid);
                 local_rowids.push_back(readids[j]);
                 local_positions.push_back(positions[j]);
             }
+
+            kmerid++;
         }
 
         FullyDistVec<uint64_t, uint64_t> drows(local_rowids, commgrid);
@@ -89,6 +100,8 @@ int main(int argc, char *argv[])
         AT.ParallelWriteMM("AT.mtx", false);
 
         SpParMat<uint64_t, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>> B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, SpDCCols<uint64_t, ReadOverlap>>(A, AT);
+
+        B.ParallelWriteMM("B.mtx", false, OverlapHandler());
     }
 
     MPI_Finalize();

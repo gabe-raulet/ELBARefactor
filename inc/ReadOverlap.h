@@ -30,6 +30,12 @@ struct ReadOverlap
     }
 
     int intplus(int a, int b);
+
+    friend std::ostream& operator<<(std::ostream& os, const ReadOverlap& o)
+    {
+        os << o.begQs[0] << "\t" << o.begTs[0] << "\t" << o.begQs[1] << "\t" << o.begTs[1];
+        return os;
+    }
 };
 
 #endif
