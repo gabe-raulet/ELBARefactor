@@ -50,13 +50,13 @@ int main(int argc, char *argv[])
 
         auto A = CreateKmerMatrix(myreads, kmermap, commgrid);
 
-        size_t nrows = A.getnrow();
-        size_t ncols = A.getncol();
-        size_t nnz = A.getnnz();
+        size_t numreads = A.getnrow();
+        size_t numkmers = A.getncol();
+        size_t numseeds = A.getnnz();
 
         if (!myrank)
         {
-            std::cout << "k-mer matrix A has " << nrows << " rows (readids), " << ncols << " columns (k-mers), and " << nnz << " nonzeros (k-mer seeds)\n" << std::endl;
+            std::cout << "K-mer matrix A has " << numreads << " rows (readids), " << numkmers << " columns (k-mers), and " << numseeds << " nonzeros (k-mer seeds)\n" << std::endl;
         }
         MPI_Barrier(gridworld);
 
@@ -66,6 +66,14 @@ int main(int argc, char *argv[])
         CT<ReadOverlap>::PSpParMat B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, CT<ReadOverlap>::PSpDCCols>(A, AT);
 
         B.Prune([](const auto& item) { return item.count <= 1; });
+
+        size_t numovlpseeds = B.getnnz();
+
+        if (!myrank)
+        {
+            std::cout << "Overlap matrix B has " << numreads << " rows (readids), " << numreads << " columns (readids), and " << numovlpseeds << " nonzeros (overlap seeds)\n" << std::endl;
+        }
+        MPI_Barrier(gridworld);
 
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
     }
