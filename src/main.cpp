@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         }
         MPI_Barrier(gridworld);
 
-        B.ParallelWriteMM("B.mtx", false, OverlapHandler());
+        // B.ParallelWriteMM("B.mtx", false, OverlapHandler());
     }
 
     MPI_Finalize();
