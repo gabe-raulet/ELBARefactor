@@ -43,35 +43,7 @@ int main(int argc, char *argv[])
         Vector<String> myreads = index.GetMyReads();
         KmerCountMap kmermap = GetKmerCountMapKeys(myreads, commgrid);
 
-        size_t numkmers = kmermap.size();
-        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
-
-        if (!myrank)
-        {
-#if USE_BLOOM == 1
-            std::cout << "A total of " << numkmers << " likely non-singleton 'column' k-mers found\n" << std::endl;
-#else
-            std::cout << "A total of " << numkmers << " 'column' k-mers found\n" << std::endl;
-#endif
-        }
-        MPI_Barrier(gridworld);
-
         GetKmerCountMapValues(myreads, kmermap, commgrid);
-
-        auto itr = kmermap.begin();
-
-        while (itr != kmermap.end())
-        {
-            itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmermap.erase(itr) : ++itr;
-        }
-
-        numkmers = kmermap.size();
-        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
-        if (!myrank)
-        {
-            std::cout << "A total of " << numkmers << " reliable 'column' k-mers found\n" << std::endl;
-        }
-        MPI_Barrier(gridworld);
 
         PrintKmerHistogram(kmermap, commgrid);
 

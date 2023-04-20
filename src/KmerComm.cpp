@@ -283,6 +283,19 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     LogAll(logstream->str(), commgrid);
 
+    size_t numkmers = kmermap.size();
+    MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+
+    if (!myrank)
+    {
+#if USE_BLOOM == 1
+        std::cout << "A total of " << numkmers << " likely non-singleton 'column' k-mers found\n" << std::endl;
+#else
+        std::cout << "A total of " << numkmers << " 'column' k-mers found\n" << std::endl;
+#endif
+    }
+    MPI_Barrier(commgrid->GetWorld());
+
     return kmermap;
 }
 
@@ -417,6 +430,21 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 #endif
 
     LogAll(logstream->str(), commgrid);
+
+    auto itr = kmermap.begin();
+
+    while (itr != kmermap.end())
+    {
+        itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmermap.erase(itr) : ++itr;
+    }
+
+    size_t numkmers = kmermap.size();
+    MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+    if (!myrank)
+    {
+        std::cout << "A total of " << numkmers << " reliable 'column' k-mers found\n" << std::endl;
+    }
+    MPI_Barrier(commgrid->GetWorld());
 }
 
 int GetKmerOwner(const TKmer& kmer, int nprocs)
