@@ -50,6 +50,16 @@ int main(int argc, char *argv[])
 
         auto A = CreateKmerMatrix(myreads, kmermap, commgrid);
 
+        size_t nrows = A.getnrow();
+        size_t ncols = A.getncol();
+        size_t nnz = A.getnnz();
+
+        if (!myrank)
+        {
+            std::cout << "k-mer matrix A has " << nrows << " rows (readids), " << ncols << " columns (k-mers), and " << nnz << " nonzeros (k-mer seeds)\n" << std::endl;
+        }
+        MPI_Barrier(gridworld);
+
         auto AT = A;
         AT.Transpose();
 
@@ -94,7 +104,10 @@ void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgr
                 std::cout << i << "\t" << histo[i] << std::endl;
             }
         }
+        std::cout << std::endl;
     }
+
+    MPI_Barrier(commgrid->GetWorld());
 }
 
 CT<PosInRead>::PSpParMat CreateKmerMatrix(const Vector<String>& myreads, const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid)
