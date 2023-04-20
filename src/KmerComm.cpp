@@ -1,5 +1,6 @@
 #include "KmerComm.h"
 #include "Bloom.h"
+#include "Logger.h"
 #include <cstring>
 #include <numeric>
 #include <algorithm>
@@ -65,9 +66,16 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      * in the grid communicator, and then we can get an estimate for the total
      * number of unique k-mers in the dataset.
      */
+
+    double mycardinality = hll.Estimate();
+
+    std::ostringstream ss;
+    ss << "my computed k-mer cardinality estimate is " << mycardinality;
+    LogAll(ss.str(), commgrid);
+
     hll.ParallelMerge(commgrid->GetWorld());
-    double global_cardinality_estimate = hll.Estimate();
-    size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(global_cardinality_estimate / nprocs));
+    double cardinality = hll.Estimate();
+    size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
     // if (!myrank)
     // {
