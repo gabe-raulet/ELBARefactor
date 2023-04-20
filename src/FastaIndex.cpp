@@ -70,11 +70,11 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
     MPI_Type_free(&faidx_dtype_t);
 }
 
-Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
+Vector<String> FastaIndex::GetMyReads()
 {
     Vector<String> reads;
 
-    const Vector<faidx_record_t>& records = index.getrecords();
+    const Vector<faidx_record_t>& records = getrecords();
     size_t num_records = records.size();
 
     reads.reserve(num_records);
@@ -86,7 +86,7 @@ Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
     MPI_Offset endpos = last_record.pos + last_record.len + (last_record.len / last_record.bases);
 
     MPI_File fh;
-    MPI_File_open(index.commgrid->GetWorld(), index.fasta_fname.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+    MPI_File_open(commgrid->GetWorld(), fasta_fname.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 
     MPI_Offset filesize;
     MPI_File_get_size(fh, &filesize);
@@ -102,7 +102,7 @@ Vector<String> FastaIndex::GetMyReads(const FastaIndex& index)
 
     size_t maxlen, offset = 0;
 
-    MPI_Exscan(&num_records, &offset, 1, MPI_SIZE_T, MPI_SUM, index.commgrid->GetWorld());
+    MPI_Exscan(&num_records, &offset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
     maxlen = std::accumulate(records.begin(), records.end(), 0, [](size_t l, const faidx_record_t& rec) { return l > rec.len? l : rec.len; });
 

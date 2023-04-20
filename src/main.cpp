@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         int nprocs = commgrid->GetSize();
 
         FastaIndex index(fasta_fname, commgrid);
-        Vector<String> myreads = FastaIndex::GetMyReads(index);
+        Vector<String> myreads = index.GetMyReads();
         KmerCountMap kmermap = GetKmerCountMapKeys(myreads, commgrid);
 
         size_t numkmers = kmermap.size();

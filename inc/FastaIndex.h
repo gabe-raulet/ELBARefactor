@@ -12,7 +12,8 @@ public:
 
     SharedPtr<CommGrid> getcommgrid() const { return commgrid; }
     const Vector<faidx_record_t>& getrecords() const { return records; }
-    static Vector<String> GetMyReads(const FastaIndex& index);
+    Vector<String> GetMyReads();
+    // static Vector<String> GetMyReads(const FastaIndex& index);
 
     void PrintInfo() const;
 
