@@ -15,6 +15,8 @@ static_assert(USE_BLOOM == 0);
 
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
+    std::unique_ptr<std::ostringstream> logstream;
+
     /*
      * This function initializes an associative container of k-mers on each processor,
      * whose keys correspond to the k-mers that have been assigned to that processor.
@@ -69,12 +71,20 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     double mycardinality = hll.Estimate();
 
-    std::ostringstream ss;
-    ss << "my computed k-mer cardinality estimate is " << mycardinality;
-    LogAll(ss.str(), commgrid);
+    logstream.reset(new std::ostringstream());
+    *logstream << "my computed k-mer cardinality estimate is " << mycardinality;
+    LogAll(logstream->str(), commgrid);
 
     hll.ParallelMerge(commgrid->GetWorld());
     double cardinality = hll.Estimate();
+
+    if (!myrank)
+    {
+        std::cout << "globally computed k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << std::endl;
+    }
+
+    MPI_Barrier(commgrid->GetWorld());
+
     size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
     // if (!myrank)
