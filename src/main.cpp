@@ -29,6 +29,16 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
+        if (!myrank)
+        {
+            std::cout << "-DKMER_SIZE=" << KMER_SIZE << " "
+                      << "-DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << " "
+                      << "-DUPPER_KMER_FREQ=" << UPPER_KMER_FREQ << " "
+                      << "-DUSE_BLOOM=" << USE_BLOOM << "\n" << std::endl;
+        }
+
+        MPI_Barrier(gridworld);
+
         FastaIndex index(fasta_fname, commgrid);
         Vector<String> myreads = index.GetMyReads();
         KmerCountMap kmermap = GetKmerCountMapKeys(myreads, commgrid);
@@ -36,10 +46,15 @@ int main(int argc, char *argv[])
         size_t numkmers = kmermap.size();
         MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
-        // if (!myrank)
-        // {
-            // std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
-        // }
+        if (!myrank)
+        {
+#if USE_BLOOM == 1
+            std::cout << "A total of " << numkmers << " likely non-singleton 'column' k-mers found\n" << std::endl;
+#else
+            std::cout << "A total of " << numkmers << " 'column' k-mers found\n" << std::endl;
+#endif
+        }
+        MPI_Barrier(gridworld);
 
         GetKmerCountMapValues(myreads, kmermap, commgrid);
 
@@ -50,7 +65,15 @@ int main(int argc, char *argv[])
             itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmermap.erase(itr) : ++itr;
         }
 
-        // PrintKmerHistogram(kmermap, commgrid);
+        numkmers = kmermap.size();
+        MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+        if (!myrank)
+        {
+            std::cout << "A total of " << numkmers << " reliable 'column' k-mers found\n" << std::endl;
+        }
+        MPI_Barrier(gridworld);
+
+        PrintKmerHistogram(kmermap, commgrid);
 
         uint64_t kmerid = kmermap.size();
         uint64_t totkmers = kmerid;

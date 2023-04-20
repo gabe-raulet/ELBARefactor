@@ -72,7 +72,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     double mycardinality = hll.Estimate();
 
     logstream.reset(new std::ostringstream());
-    *logstream << "my computed k-mer cardinality estimate is " << mycardinality;
+    *logstream << "my computed 'column' k-mer cardinality estimate is " << mycardinality;
     LogAll(logstream->str(), commgrid);
 
     hll.ParallelMerge(commgrid->GetWorld());
@@ -81,16 +81,10 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     if (!myrank)
     {
-        std::cout << "global k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor" << std::endl;
+        std::cout << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor\n" << std::endl;
     }
 
     MPI_Barrier(commgrid->GetWorld());
-
-    // if (!myrank)
-    // {
-        // std::cout << "Estimate a total of " << std::fixed << std::setprecision(4) << global_cardinality_estimate << " k-mers" << std::endl;
-        // std::cout << "Estimate an average of " << local_cardinality_estimate << " k-mers per processor" << std::endl;
-    // }
 
     /*
      * Remember what the final goal is: we want to find all the "seed k-mers" whose corresponding
@@ -130,6 +124,9 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     Vector<MPI_Displ_type> sdispls(nprocs); /* sdispls[i] = sdispls[i-1] + sendcnt[i] */
     Vector<MPI_Displ_type> rdispls(nprocs); /* rdispls[i] = rdispls[i-1] + recvcnt[i] */
 
+    logstream.reset(new std::ostringstream());
+    *logstream << std::setprecision(4) << "sending 'row' k-mers to each processor in this amount (megabytes): {";
+
     /*
      * Initialize sendcnt parameter for local process.
      */
@@ -140,7 +137,12 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
          * usually 16 for 32 < k < 64.
          */
         sendcnt[i] = kmerbuckets[i].size() * TKmer::N_BYTES;
+        *logstream << (static_cast<double>(sendcnt[i]) / (1024 * 1024)) << ",";
     }
+
+    *logstream << "}";
+    LogAll(logstream->str(), commgrid);
+
 
     /*
      * Let every process know how many k-mers it will be receiving
@@ -205,6 +207,11 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      */
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
+    size_t rowkmers_received = static_cast<size_t>(totrecv / TKmer::N_BYTES);
+    logstream.reset(new std::ostringstream());
+    *logstream << "received a total of " << rowkmers_received << " 'row' k-mers in first ALLTOALL exchange";
+    LogAll(logstream->str(), commgrid);
+
     kmermap.reserve(avgcardinality);
 
 #if USE_BLOOM == 1
@@ -266,13 +273,23 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 #endif
     }
 
-    // std::cout << "Processor " << myrank << " received " << kmermap.size() << " distinct k-mers" << std::endl;
+    logstream.reset(new std::ostringstream());
+    *logstream << rowkmers_received;
+#if USE_BLOOM == 1
+    *logstream << " row k-mers filtered by Bloom filter and hash table into " << kmermap.size() << " likely non-singleton 'column' k-mers";
+#else
+    *logstream << " row k-mers filtered by hash table into " << kmermap.size() << " 'column' k-mers";
+#endif
+
+    LogAll(logstream->str(), commgrid);
 
     return kmermap;
 }
 
 void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap, SharedPtr<CommGrid> commgrid)
 {
+    std::unique_ptr<std::ostringstream> logstream;
+
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
     size_t numreads = myreads.size();
@@ -293,10 +310,17 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
 
     constexpr size_t seedbytes = TKmer::N_BYTES + sizeof(ReadId) + sizeof(PosInRead);
 
+    logstream.reset(new std::ostringstream());
+    *logstream << std::setprecision(4) << "sending 'row' k-mers to each processor in this amount (megabytes): {";
+
     for (int i = 0; i < nprocs; ++i)
     {
         sendcnt[i] = kmerseeds[i].size() * seedbytes;
+        *logstream << (static_cast<double>(sendcnt[i]) / (1024 * 1024)) << ",";
     }
+
+    *logstream << "}";
+    LogAll(logstream->str(), commgrid);
 
     MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
 
@@ -336,6 +360,10 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
     size_t numkmerseeds = totrecv / seedbytes;
+
+    logstream.reset(new std::ostringstream());
+    *logstream << "received a total of " << numkmerseeds << " 'row' k-mers in second ALLTOALL exchange";
+    LogAll(logstream->str(), commgrid);
 
     uint8_t *addrs2read = recvbuf.data();
 
@@ -377,11 +405,18 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
         count++;
     }
 
+    logstream.reset(new std::ostringstream());
+    *logstream << numkmerseeds;
+
 #if USE_BLOOM == 1
+    *logstream << " row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into " << kmermap.size() << " semi-reliable 'column' k-mers";
     delete bm;
 #else
     static_assert(USE_BLOOM == 0);
+    *logstream << " row k-mers filtered by hash table and upper k-mer bound threshold into " << kmermap.size() << " semi-reliable 'column' k-mers";
 #endif
+
+    LogAll(logstream->str(), commgrid);
 }
 
 int GetKmerOwner(const TKmer& kmer, int nprocs)

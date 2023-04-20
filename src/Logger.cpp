@@ -34,6 +34,7 @@ void LogAll(const String mylog, SharedPtr<CommGrid> commgrid)
             String message(buf + displs[i], recvcnt[i]);
             std::cout << "processor[" << i+1 << "/" << nprocs << "] says '" << message << "'" << std::endl;
         }
+        std::cout << std::endl;
     }
 
     MPI_Barrier(comm);
