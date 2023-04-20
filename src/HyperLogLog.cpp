@@ -85,7 +85,8 @@ void HyperLogLog::Merge(const HyperLogLog& rhs)
     }
 }
 
-void HyperLogLog::ParallelMerge(MPI_Comm comm)
+HyperLogLog& HyperLogLog::ParallelMerge(MPI_Comm comm)
 {
     MPI_Allreduce(MPI_IN_PLACE, registers.data(), static_cast<int>(size+1), MPI_UINT8_T, MPI_MAX, comm);
+    return *this;
 }

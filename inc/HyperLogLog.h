@@ -8,13 +8,13 @@
 class HyperLogLog
 {
 public:
-    HyperLogLog(uint8_t bits);
+    HyperLogLog(uint8_t bits = 12);
 
     void Add(char const *s, size_t len);
     void Add(const String& s) { Add(s.c_str(), s.size()); }
     double Estimate() const;
     void Merge(const HyperLogLog& rhs);
-    void ParallelMerge(MPI_Comm comm);
+    HyperLogLog& ParallelMerge(MPI_Comm comm);
 
 private:
     uint8_t bits; /* register bit width */

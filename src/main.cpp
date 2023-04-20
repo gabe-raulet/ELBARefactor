@@ -14,6 +14,8 @@
 
 String fasta_fname = "data/reads.fa";
 
+void LogAll(const String mylog, SharedPtr<CommGrid> commgrid);
+String ProcessorName(SharedPtr<CommGrid> commgrid);
 void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid);
 
 int main(int argc, char *argv[])
@@ -23,17 +25,14 @@ int main(int argc, char *argv[])
     if (argc == 2) fasta_fname.assign(argv[1]);
 
     {
-        auto commgrid = SharedPtr<CommGrid>(new CommGrid(MPI_COMM_WORLD, 0, 0));
+        MPI_Comm gridworld = MPI_COMM_WORLD;
+        auto commgrid = SharedPtr<CommGrid>(new CommGrid(gridworld, 0, 0));
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
+        TuplePair<std::ostringstream> logstream;
         FastaIndex index(fasta_fname, commgrid);
-
         Vector<String> myreads = FastaIndex::GetMyReads(index);
-
-        /* TODO: <<<<<<< BELOW */
-        (void)0;
-        /* TODO: ======= REPLACES */
         KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
 
         size_t numkmers = kmercounts.size();
@@ -49,7 +48,6 @@ int main(int argc, char *argv[])
         {
             itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmercounts.erase(itr) : ++itr;
         }
-        /* TODO: >>>>>>> ABOVE */
 
         PrintKmerHistogram(kmercounts, commgrid);
 
@@ -63,7 +61,6 @@ int main(int argc, char *argv[])
         MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
         if (myrank == 0) kmerid = 0;
 
-        /* TODO: try reserving memory here before later push backs */
         Vector<uint64_t> local_rowids, local_colids;
         Vector<PosInRead> local_positions;
 
@@ -94,7 +91,7 @@ int main(int argc, char *argv[])
 
         CT<ReadOverlap>::PSpParMat B = Mult_AnXBn_DoubleBuff<KmerIntersect, ReadOverlap, CT<ReadOverlap>::PSpDCCols>(A, AT);
 
-        B.Prune([](const auto& item) { return item.count <= 1; }); /* prune overlaps that had less than 2 common k-mer seeds */
+        B.Prune([](const auto& item) { return item.count <= 1; });
 
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
     }
@@ -134,4 +131,64 @@ void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgr
             }
         }
     }
+}
+
+void LogAll(const String mylog, SharedPtr<CommGrid> commgrid)
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    MPI_Comm comm = commgrid->GetWorld();
+
+    Vector<int> recvcnt, displs;
+    int sendcnt = mylog.size();
+    int totrecv;
+
+    if (!myrank) recvcnt.resize(nprocs);
+
+    MPI_Gather(&sendcnt, 1, MPI_INT, recvcnt.data(), 1, MPI_INT, 0, comm);
+
+    if (!myrank)
+    {
+        displs.resize(nprocs);
+        displs.front() = 0;
+        std::partial_sum(recvcnt.begin(), recvcnt.end()-1, displs.begin()+1);
+        totrecv = recvcnt.back() + displs.back();
+    }
+
+    Vector<char> recvbuf(totrecv);
+
+    MPI_Gatherv(mylog.c_str(), sendcnt, MPI_CHAR, recvbuf.data(), recvcnt.data(), displs.data(), MPI_CHAR, 0, comm);
+
+    if (!myrank)
+    {
+        char const *buf = recvbuf.data();
+
+        for (int i = 0; i < nprocs; ++i)
+        {
+            String message(buf + displs[i], recvcnt[i]);
+            std::cout << "processor[" << i+1 << "/" << nprocs << "] says '" << message << "'" << std::endl;
+        }
+    }
+
+    MPI_Barrier(comm);
+}
+
+String ProcessorName(SharedPtr<CommGrid> commgrid)
+{
+    static bool initialized = false;
+    static String name;
+
+    if (!initialized)
+    {
+        int myrank = commgrid->GetRank();
+        int nprocs = commgrid->GetSize();
+        int rowrank = commgrid->GetRankInProcCol();
+        int colrank = commgrid->GetRankInProcRow();
+        std::ostringstream ss;
+        ss  << "processor[" << myrank+1 << "/" << nprocs << "]...grid[" << rowrank+1 <<"," << colrank+1 << "])";
+        name = ss.str();
+        initialized = true;
+    }
+
+    return name;
 }

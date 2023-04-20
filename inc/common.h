@@ -32,8 +32,8 @@ using SharedPtr = std::shared_ptr<T>;
 template <class T, std::size_t N>
 using Array = std::array<T, N>;
 
-template <class T1, class T2>
-using Pair = std::pair<T1, T2>;
+template <class T>
+using TuplePair = std::tuple<T, T>;
 
 template <class... Types>
 using Tuple = std::tuple<Types...>;
@@ -44,8 +44,8 @@ using Hash = std::hash<T>;
 #if MPI_VERSION == 3
 #define MPI_HAS_LARGE_COUNTS 0
 
-typedef int MPI_Count_type;
-typedef int MPI_Displ_type;
+using MPI_Count_type = int;
+using MPI_Displ_type = int;
 
 #define MPI_COUNT_TYPE MPI_INT
 
@@ -60,8 +60,8 @@ typedef int MPI_Displ_type;
 #elif MPI_VERSION == 4
 #define MPI_HAS_LARGE_COUNTS 1
 
-typedef MPI_Count MPI_Count_type;
-typedef MPI_Aint MPI_Displ_type;
+using MPI_Count_type = MPI_Count;
+using MPI_Displ_type = MPI_Aint;
 
 #define MPI_COUNT_TYPE MPI_COUNT
 
