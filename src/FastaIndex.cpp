@@ -1,4 +1,5 @@
 #include "FastaIndex.h"
+#include "Logger.h"
 #include <cstring>
 #include <iterator>
 #include <algorithm>
@@ -128,6 +129,19 @@ Vector<String> FastaIndex::GetMyReads()
     }
 
     delete[] seqbuf;
+
+    size_t mynumreads = reads.size();
+    size_t mytotbases = std::accumulate(records.begin(), records.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
+    double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
+
+    size_t myreadoffset;
+    MPI_Exscan(&mynumreads, &myreadoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+    if (commgrid->GetRank() == 0) myreadoffset = 0;
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(3) << "parsed reads [" << myreadoffset << ".." << myreadoffset+mynumreads << ") with an average length of " << myavglen << " nucleotides each (" << (static_cast<double>(mytotbases) / (1024.0 * 1024.0)) << " megabytes) from FASTA " << fasta_fname;
+    LogAll(ss.str(), commgrid);
+
 
     return reads;
 }
