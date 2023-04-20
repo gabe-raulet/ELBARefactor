@@ -77,15 +77,14 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     hll.ParallelMerge(commgrid->GetWorld());
     double cardinality = hll.Estimate();
+    size_t avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
     if (!myrank)
     {
-        std::cout << "globally computed k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << std::endl;
+        std::cout << "global k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor" << std::endl;
     }
 
     MPI_Barrier(commgrid->GetWorld());
-
-    size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
     // if (!myrank)
     // {
@@ -206,10 +205,10 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      */
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
-    kmermap.reserve(local_cardinality_estimate);
+    kmermap.reserve(avgcardinality);
 
 #if USE_BLOOM == 1
-    bm = new Bloom(static_cast<int64_t>(local_cardinality_estimate), 0.05);
+    bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
 #else
     static_assert(USE_BLOOM == 0);
 #endif
