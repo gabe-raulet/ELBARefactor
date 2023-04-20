@@ -69,11 +69,11 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     double global_cardinality_estimate = hll.Estimate();
     size_t local_cardinality_estimate = static_cast<size_t>(std::ceil(global_cardinality_estimate / nprocs));
 
-    if (!myrank)
-    {
-        std::cout << "Estimate a total of " << std::fixed << std::setprecision(4) << global_cardinality_estimate << " k-mers" << std::endl;
-        std::cout << "Estimate an average of " << local_cardinality_estimate << " k-mers per processor" << std::endl;
-    }
+    // if (!myrank)
+    // {
+        // std::cout << "Estimate a total of " << std::fixed << std::setprecision(4) << global_cardinality_estimate << " k-mers" << std::endl;
+        // std::cout << "Estimate an average of " << local_cardinality_estimate << " k-mers per processor" << std::endl;
+    // }
 
     /*
      * Remember what the final goal is: we want to find all the "seed k-mers" whose corresponding
@@ -249,7 +249,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 #endif
     }
 
-    std::cout << "Processor " << myrank << " received " << kmermap.size() << " distinct k-mers" << std::endl;
+    // std::cout << "Processor " << myrank << " received " << kmermap.size() << " distinct k-mers" << std::endl;
 
     return kmermap;
 }

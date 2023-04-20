@@ -30,28 +30,30 @@ int main(int argc, char *argv[])
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
 
-        TuplePair<std::ostringstream> logstream;
         FastaIndex index(fasta_fname, commgrid);
         Vector<String> myreads = FastaIndex::GetMyReads(index);
-        KmerCountMap kmercounts = GetKmerCountMapKeys(myreads, commgrid);
+        KmerCountMap kmermap = GetKmerCountMapKeys(myreads, commgrid);
 
-        size_t numkmers = kmercounts.size();
+        size_t numkmers = kmermap.size();
         MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
-        if (!myrank) std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
-
-        GetKmerCountMapValues(myreads, kmercounts, commgrid);
-
-        auto itr = kmercounts.begin();
-
-        while (itr != kmercounts.end())
+        if (!myrank)
         {
-            itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmercounts.erase(itr) : ++itr;
+            std::cout << "A total of " << numkmers << " k-mers exist in the dataset" << std::endl;
         }
 
-        PrintKmerHistogram(kmercounts, commgrid);
+        GetKmerCountMapValues(myreads, kmermap, commgrid);
 
-        uint64_t kmerid = kmercounts.size();
+        auto itr = kmermap.begin();
+
+        while (itr != kmermap.end())
+        {
+            itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmermap.erase(itr) : ++itr;
+        }
+
+        // PrintKmerHistogram(kmermap, commgrid);
+
+        uint64_t kmerid = kmermap.size();
         uint64_t totkmers = kmerid;
         uint64_t totreads = myreads.size();
 
@@ -64,7 +66,7 @@ int main(int argc, char *argv[])
         Vector<uint64_t> local_rowids, local_colids;
         Vector<PosInRead> local_positions;
 
-        for (auto itr = kmercounts.begin(); itr != kmercounts.end(); ++itr)
+        for (auto itr = kmermap.begin(); itr != kmermap.end(); ++itr)
         {
             READIDS& readids = std::get<0>(itr->second);
             POSITIONS& positions = std::get<1>(itr->second);
