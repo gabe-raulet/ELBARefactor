@@ -1,0 +1,90 @@
+-DKMER_SIZE=31 -DLOWER_KMER_FREQ=20 -DUPPER_KMER_FREQ=30 -DUSE_BLOOM=1
+
+processor[1/9] says 'my computed 'column' k-mer cardinality estimate is 146038'
+processor[2/9] says 'my computed 'column' k-mer cardinality estimate is 150816'
+processor[3/9] says 'my computed 'column' k-mer cardinality estimate is 141623'
+processor[4/9] says 'my computed 'column' k-mer cardinality estimate is 135470'
+processor[5/9] says 'my computed 'column' k-mer cardinality estimate is 153575'
+processor[6/9] says 'my computed 'column' k-mer cardinality estimate is 139563'
+processor[7/9] says 'my computed 'column' k-mer cardinality estimate is 142215'
+processor[8/9] says 'my computed 'column' k-mer cardinality estimate is 143021'
+processor[9/9] says 'my computed 'column' k-mer cardinality estimate is 147912'
+
+global 'column' k-mer cardinality (merging all 9 procesors results) is 354973, or an average of 39442 per processor
+
+processor[1/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3098,0.3087,0.3078,0.3061,0.3085,0.3111,0.3122,0.3111,0.3126,}'
+processor[2/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3046,0.3013,0.3056,0.3056,0.3076,0.3043,0.3115,0.3078,0.3078,}'
+processor[3/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3136,0.3125,0.3144,0.3124,0.311,0.308,0.3189,0.317,0.3155,}'
+processor[4/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3083,0.3045,0.309,0.3065,0.3084,0.3093,0.3122,0.312,0.3147,}'
+processor[5/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3031,0.3035,0.3067,0.3029,0.3058,0.3035,0.3083,0.305,0.3071,}'
+processor[6/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.308,0.307,0.3085,0.3065,0.3081,0.3096,0.3126,0.3118,0.3148,}'
+processor[7/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3077,0.304,0.3082,0.3072,0.3059,0.3038,0.3138,0.31,0.3085,}'
+processor[8/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.3129,0.3147,0.3173,0.3125,0.3146,0.3141,0.3188,0.3157,0.3186,}'
+processor[9/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.334,0.3309,0.3344,0.3349,0.3367,0.3336,0.3405,0.3388,0.338,}'
+
+processor[1/9] says 'received a total of 367261 'row' k-mers in first ALLTOALL exchange'
+processor[2/9] says 'received a total of 365321 'row' k-mers in first ALLTOALL exchange'
+processor[3/9] says 'received a total of 368535 'row' k-mers in first ALLTOALL exchange'
+processor[4/9] says 'received a total of 366302 'row' k-mers in first ALLTOALL exchange'
+processor[5/9] says 'received a total of 367879 'row' k-mers in first ALLTOALL exchange'
+processor[6/9] says 'received a total of 366640 'row' k-mers in first ALLTOALL exchange'
+processor[7/9] says 'received a total of 373391 'row' k-mers in first ALLTOALL exchange'
+processor[8/9] says 'received a total of 370842 'row' k-mers in first ALLTOALL exchange'
+processor[9/9] says 'received a total of 371919 'row' k-mers in first ALLTOALL exchange'
+
+processor[1/9] says '367261 row k-mers filtered by Bloom filter and hash table into 15812 likely non-singleton 'column' k-mers'
+processor[2/9] says '365321 row k-mers filtered by Bloom filter and hash table into 15825 likely non-singleton 'column' k-mers'
+processor[3/9] says '368535 row k-mers filtered by Bloom filter and hash table into 15886 likely non-singleton 'column' k-mers'
+processor[4/9] says '366302 row k-mers filtered by Bloom filter and hash table into 15854 likely non-singleton 'column' k-mers'
+processor[5/9] says '367879 row k-mers filtered by Bloom filter and hash table into 15874 likely non-singleton 'column' k-mers'
+processor[6/9] says '366640 row k-mers filtered by Bloom filter and hash table into 15757 likely non-singleton 'column' k-mers'
+processor[7/9] says '373391 row k-mers filtered by Bloom filter and hash table into 16135 likely non-singleton 'column' k-mers'
+processor[8/9] says '370842 row k-mers filtered by Bloom filter and hash table into 15917 likely non-singleton 'column' k-mers'
+processor[9/9] says '371919 row k-mers filtered by Bloom filter and hash table into 16051 likely non-singleton 'column' k-mers'
+
+A total of 143111 likely non-singleton 'column' k-mers found
+
+processor[1/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.6971,0.6947,0.6925,0.6886,0.6941,0.6999,0.7025,0.7001,0.7034,}'
+processor[2/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.6853,0.6779,0.6875,0.6877,0.6922,0.6847,0.7009,0.6926,0.6926,}'
+processor[3/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.7057,0.7032,0.7074,0.703,0.6997,0.693,0.7175,0.7133,0.7098,}'
+processor[4/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.6936,0.6851,0.6952,0.6897,0.694,0.6959,0.7024,0.7021,0.7082,}'
+processor[5/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.682,0.6829,0.6901,0.6815,0.688,0.6829,0.6937,0.6863,0.691,}'
+processor[6/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.693,0.6907,0.694,0.6896,0.6933,0.6966,0.7032,0.7015,0.7082,}'
+processor[7/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.6922,0.684,0.6934,0.6911,0.6883,0.6835,0.7061,0.6975,0.694,}'
+processor[8/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.7039,0.708,0.7139,0.7032,0.7079,0.7066,0.7172,0.7103,0.7168,}'
+processor[9/9] says 'sending 'row' k-mers to each processor in this amount (megabytes): {0.7516,0.7446,0.7523,0.7535,0.7576,0.7507,0.7661,0.7623,0.7604,}'
+
+processor[1/9] says 'received a total of 367261 'row' k-mers in second ALLTOALL exchange'
+processor[2/9] says 'received a total of 365321 'row' k-mers in second ALLTOALL exchange'
+processor[3/9] says 'received a total of 368535 'row' k-mers in second ALLTOALL exchange'
+processor[4/9] says 'received a total of 366302 'row' k-mers in second ALLTOALL exchange'
+processor[5/9] says 'received a total of 367879 'row' k-mers in second ALLTOALL exchange'
+processor[6/9] says 'received a total of 366640 'row' k-mers in second ALLTOALL exchange'
+processor[7/9] says 'received a total of 373391 'row' k-mers in second ALLTOALL exchange'
+processor[8/9] says 'received a total of 370842 'row' k-mers in second ALLTOALL exchange'
+processor[9/9] says 'received a total of 371919 'row' k-mers in second ALLTOALL exchange'
+
+processor[1/9] says '367261 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13010 semi-reliable 'column' k-mers'
+processor[2/9] says '365321 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13058 semi-reliable 'column' k-mers'
+processor[3/9] says '368535 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13112 semi-reliable 'column' k-mers'
+processor[4/9] says '366302 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13100 semi-reliable 'column' k-mers'
+processor[5/9] says '367879 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13050 semi-reliable 'column' k-mers'
+processor[6/9] says '366640 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 12954 semi-reliable 'column' k-mers'
+processor[7/9] says '373391 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13303 semi-reliable 'column' k-mers'
+processor[8/9] says '370842 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13100 semi-reliable 'column' k-mers'
+processor[9/9] says '371919 row k-mers filtered by Bloom filter, hash table, and upper k-mer bound threshold into 13272 semi-reliable 'column' k-mers'
+
+A total of 71843 reliable 'column' k-mers found
+
+#count	numkmers
+20	4827
+21	6249
+22	7195
+23	7866
+24	7884
+25	9293
+26	9352
+27	7313
+28	5431
+29	3314
+30	3119
