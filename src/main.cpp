@@ -16,6 +16,7 @@
 String fasta_fname = "data/reads.fa";
 
 void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid);
+CT<PosInRead>::PSpParMat CreateKmerMatrix(const Vector<String>& myreads, const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid);
 
 int main(int argc, char *argv[])
 {
@@ -47,40 +48,7 @@ int main(int argc, char *argv[])
 
         PrintKmerHistogram(kmermap, commgrid);
 
-        uint64_t kmerid = kmermap.size();
-        uint64_t totkmers = kmerid;
-        uint64_t totreads = myreads.size();
-
-        MPI_Allreduce(&kmerid,      &totkmers, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
-        MPI_Allreduce(MPI_IN_PLACE, &totreads, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
-
-        MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
-        if (myrank == 0) kmerid = 0;
-
-        Vector<uint64_t> local_rowids, local_colids;
-        Vector<PosInRead> local_positions;
-
-        for (auto itr = kmermap.begin(); itr != kmermap.end(); ++itr)
-        {
-            READIDS& readids = std::get<0>(itr->second);
-            POSITIONS& positions = std::get<1>(itr->second);
-            int cnt = std::get<2>(itr->second);
-
-            for (int j = 0; j < cnt; ++j)
-            {
-                local_colids.push_back(kmerid);
-                local_rowids.push_back(readids[j]);
-                local_positions.push_back(positions[j]);
-            }
-
-            kmerid++;
-        }
-
-        CT<uint64_t>::PDistVec drows(local_rowids, commgrid);
-        CT<uint64_t>::PDistVec dcols(local_colids, commgrid);
-        CT<PosInRead>::PDistVec dvals(local_positions, commgrid);
-
-        CT<PosInRead>::PSpParMat A(totreads, totkmers, drows, dcols, dvals, true);
+        auto A = CreateKmerMatrix(myreads, kmermap, commgrid);
 
         auto AT = A;
         AT.Transpose();
@@ -129,3 +97,43 @@ void PrintKmerHistogram(const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgr
     }
 }
 
+CT<PosInRead>::PSpParMat CreateKmerMatrix(const Vector<String>& myreads, const KmerCountMap& kmermap, SharedPtr<CommGrid>& commgrid)
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+
+    uint64_t kmerid = kmermap.size();
+    uint64_t totkmers = kmerid;
+    uint64_t totreads = myreads.size();
+
+    MPI_Allreduce(&kmerid,      &totkmers, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
+    MPI_Allreduce(MPI_IN_PLACE, &totreads, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
+
+    MPI_Exscan(MPI_IN_PLACE, &kmerid, 1, MPI_UINT64_T, MPI_SUM, commgrid->GetWorld());
+    if (myrank == 0) kmerid = 0;
+
+    Vector<uint64_t> local_rowids, local_colids;
+    Vector<PosInRead> local_positions;
+
+    for (auto itr = kmermap.cbegin(); itr != kmermap.cend(); ++itr)
+    {
+        const READIDS& readids = std::get<0>(itr->second);
+        const POSITIONS& positions = std::get<1>(itr->second);
+        int cnt = std::get<2>(itr->second);
+
+        for (int j = 0; j < cnt; ++j)
+        {
+            local_colids.push_back(kmerid);
+            local_rowids.push_back(readids[j]);
+            local_positions.push_back(positions[j]);
+        }
+
+        kmerid++;
+    }
+
+    CT<uint64_t>::PDistVec drows(local_rowids, commgrid);
+    CT<uint64_t>::PDistVec dcols(local_colids, commgrid);
+    CT<PosInRead>::PDistVec dvals(local_positions, commgrid);
+
+    return CT<PosInRead>::PSpParMat(totreads, totkmers, drows, dcols, dvals, true);
+}
