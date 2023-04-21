@@ -30,7 +30,6 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     Vector<uint8_t> sendbuf, recvbuf;                         /* My processor's ALLTOALL send and receive buffers of k-mers (packed) */
     size_t totsend, totrecv;                                  /* My processor's total number of send and receive bytes */
     size_t numkmerseeds;                                      /* Total number of k-mer seeds received by my processor after unpacked recweive buffer */
-    std::unique_ptr<std::ostringstream> logstream;            /* Single string for logging purposes */
 
     /*
      * Estimate the number of distinct k-mers in my local FASTA
@@ -40,15 +39,11 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     ForeachKmer(myreads, estimator);
     mycardinality = hll.Estimate();
 
-    logstream.reset(new std::ostringstream());
-    *logstream << mycardinality << " k-mers";
+    Logger log(commgrid);
+    log() << std::setprecision(3) << std::fixed << mycardinality << " k-mers";
 
-    if (!myrank)
-    {
-        std::cout << "k-mer cardinality estimates:\n" << std::endl;
-    }
-
-    LogAll(logstream->str(), commgrid);
+    log.Flush("{k-mer cardinality estimate}\n"
+              "============================\n");
 
     /*
      * Estimate the number of distinct k-mers in the entire FASTA
@@ -56,7 +51,12 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      */
     hll.ParallelMerge(commgrid->GetWorld());
     cardinality = hll.Estimate();
+
     avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
+
+    std::ostringstream rootlog;
+    rootlog << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor\n" << std::endl;
+    log.Flush(rootlog, 0);
 
     /*
      * Reserve memory for local hash table and Bloom filter using

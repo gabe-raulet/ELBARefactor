@@ -138,9 +138,14 @@ Vector<String> FastaIndex::GetMyReads()
     MPI_Exscan(&mynumreads, &myreadoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
     if (commgrid->GetRank() == 0) myreadoffset = 0;
 
-    std::ostringstream ss;
-    ss << std::fixed << std::setprecision(3) << "parsed reads [" << myreadoffset << ".." << myreadoffset+mynumreads << ") with an average length of " << myavglen << " nucleotides each (" << (static_cast<double>(mytotbases) / (1024.0 * 1024.0)) << " megabytes) from FASTA " << fasta_fname;
-    LogAll(ss.str(), commgrid);
+    // if (!myrank)
+    // {
+        // std::cout << "rank[myrank/nprocs] :: {numreads} {[start_readid..end_readid+1)} {average read length} {number of megabytes}\n";
+                  // << "============================================================================================================\n" << std::endl;
+    // }
+
+    //std::ostringstream ss;
+    //ss << std::fixed << std::setprecision(3) << mynumreads << " myreadoffset << ".." << myreadoffset+mynumreads << ") with an average length of " << myavglen << " nucleotides each (" << (static_cast<double>(mytotbases) / (1024.0 * 1024.0)) << " megabytes) from FASTA " << fasta_fname;
 
 
     return reads;
