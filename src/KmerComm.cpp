@@ -20,6 +20,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     KmerCountMap kmermap;                                     /* Received k-mers will be stored in this local hash table */
     HyperLogLog hll;                                          /* HyperLogLog counter initialized with 12 bits as default */
+    size_t numreads;                                          /* Number of locally stored reads */
     size_t avgcardinality;                                    /* Average estimate for number of distinct k-mers per procesor (via Hyperloglog)*/
     double cardinality;                                       /* Total estimate for number of distinct k-mers in dataset (via Hyperloglog) */
     double mycardinality;                                     /* Local estimate for number of distinct k-mers originating on my processor (via Hyperloglog) */
@@ -53,109 +54,114 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     kmermap.reserve(avgcardinality);
     bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
 
-    /*
-     * Distribute k-mers parsed from local FASTA partition into
-     * outgoing k-mer buckets (buckets are staging area for
-     * packing ALLTOALL send buffer). Uses hash function to
-     * determine destination processor, so that the number of
-     * distinct k-mers sent to each processor is roughly equal.
-     *
-     * Note that the number of distinct k-mers not same as number of k-mers being sent.
-     * The hash function attempts to balance the load of distinct k-mers
-     * sent to each processor, not the number of individually packed k-mers
-     * received by each processor. This is because the received k-mers are
-     * immediately queried against a Bloom filter and hash table keyed
-     * by the distinct k-mer.
-     */
-    KmerPartitionHandler partitioner(kmerbuckets);
-    ForeachKmer(myreads, partitioner);
+    BatchState batch_state(myreads.size(), commgrid);
 
-    /*
-     * ALLTOALL send counts: Number of k-mers my processor is sending to each other processor.
-     */
-    std::transform(kmerbuckets.cbegin(), kmerbuckets.cend(), sendcnt.begin(), [](const auto& bucket) { return bucket.size() * TKmer::N_BYTES; });
-
-    /*
-     * ALLTOALL send displacements and total k-mers sending.
-     */
-    sdispls.front() = 0;
-    std::partial_sum(sendcnt.begin(), sendcnt.end()-1, sdispls.begin()+1);
-    totsend = sdispls.back() + sendcnt.back();
-
-    /*
-     * ALLTOALL receive counts: Number of k-mers my processor will receive from each other processor.
-     */
-    MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
-
-    /*
-     * ALLTOALL receive displacements and total k-mers receiving.
-     */
-    rdispls.front() = 0;
-    std::partial_sum(recvcnt.begin(), recvcnt.end()-1, rdispls.begin()+1);
-    totrecv = rdispls.back() + recvcnt.back();
-
-    /*
-     * Allocate memory for send and receive buffers.
-     */
-    sendbuf.resize(totsend, 0);
-    recvbuf.resize(totrecv, 0);
-
-    /*
-     * Pack outgoing k-mers into send buffer.
-     */
-    for (int i = 0; i < nprocs; ++i)
+    do
     {
-        uint8_t *dest = sendbuf.data() + sdispls[i];
-
-        for (MPI_Count_type j = 0; j < kmerbuckets[i].size(); ++j)
-        {
-            memcpy(dest, kmerbuckets[i][j].GetBytes(), TKmer::N_BYTES);
-            dest += TKmer::N_BYTES;
-        }
-
-        kmerbuckets[i].clear();
-    }
-
-    /*
-     * Communicate locally parsed k-mers to other processors in ALLTOALL fashion.
-     */
-    MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
-
-    /*
-     * Unpack incoming k-mers in a streaming fashion.
-     */
-    numkmerseeds = totrecv / TKmer::N_BYTES;
-    uint8_t *src = recvbuf.data();
-    for (size_t i = 0; i < numkmerseeds; ++i)
-    {
-        TKmer mer(src);
-        src += TKmer::N_BYTES;
+        /*
+         * Distribute k-mers parsed from local FASTA partition into
+         * outgoing k-mer buckets (buckets are staging area for
+         * packing ALLTOALL send buffer). Uses hash function to
+         * determine destination processor, so that the number of
+         * distinct k-mers sent to each processor is roughly equal.
+         *
+         * Note that the number of distinct k-mers not same as number of k-mers being sent.
+         * The hash function attempts to balance the load of distinct k-mers
+         * sent to each processor, not the number of individually packed k-mers
+         * received by each processor. This is because the received k-mers are
+         * immediately queried against a Bloom filter and hash table keyed
+         * by the distinct k-mer.
+         */
+        KmerPartitionHandler partitioner(kmerbuckets);
+        ForeachKmer(myreads, partitioner, batch_state);
 
         /*
-         * Check if incoming k-mer is already "inside" the local Bloom filter.
+         * ALLTOALL send counts: Number of k-mers my processor is sending to each other processor.
          */
-        if (bm->Check(mer.GetBytes(), TKmer::N_BYTES))
+        std::transform(kmerbuckets.cbegin(), kmerbuckets.cend(), sendcnt.begin(), [](const auto& bucket) { return bucket.size() * TKmer::N_BYTES; });
+
+        /*
+         * ALLTOALL send displacements and total k-mers sending.
+         */
+        sdispls.front() = 0;
+        std::partial_sum(sendcnt.begin(), sendcnt.end()-1, sdispls.begin()+1);
+        totsend = sdispls.back() + sendcnt.back();
+
+        /*
+         * ALLTOALL receive counts: Number of k-mers my processor will receive from each other processor.
+         */
+        MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
+
+        /*
+         * ALLTOALL receive displacements and total k-mers receiving.
+         */
+        rdispls.front() = 0;
+        std::partial_sum(recvcnt.begin(), recvcnt.end()-1, rdispls.begin()+1);
+        totrecv = rdispls.back() + recvcnt.back();
+
+        /*
+         * Allocate memory for send and receive buffers.
+         */
+        sendbuf.resize(totsend, 0);
+        recvbuf.resize(totrecv, 0);
+
+        /*
+         * Pack outgoing k-mers into send buffer.
+         */
+        for (int i = 0; i < nprocs; ++i)
         {
-            /*
-             * With high probability, the k-mer has already been
-             * inserted into the filter, and therefore is likely not a
-             * singleton k-mer. Insert it into local hash table partition
-             * if it hasn't already been.
-             */
-            if (kmermap.find(mer) == kmermap.end())
-                kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
+            uint8_t *dest = sendbuf.data() + sdispls[i];
+
+            for (MPI_Count_type j = 0; j < kmerbuckets[i].size(); ++j)
+            {
+                memcpy(dest, kmerbuckets[i][j].GetBytes(), TKmer::N_BYTES);
+                dest += TKmer::N_BYTES;
+            }
+
+            kmerbuckets[i].clear();
         }
-        else
+
+        /*
+         * Communicate locally parsed k-mers to other processors in ALLTOALL fashion.
+         */
+        MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
+
+        /*
+         * Unpack incoming k-mers in a streaming fashion.
+         */
+        numkmerseeds = totrecv / TKmer::N_BYTES;
+        uint8_t *src = recvbuf.data();
+        for (size_t i = 0; i < numkmerseeds; ++i)
         {
+            TKmer mer(src);
+            src += TKmer::N_BYTES;
+
             /*
-             * k-mer definitely hasn't been seen before, therefore we
-             * add it to the Bloom filter. If this k-mer is a singleton,
-             * then we have effectively filtered it away from being
-             * queried on the local hash table.
+             * Check if incoming k-mer is already "inside" the local Bloom filter.
              */
-            bm->Add(mer.GetBytes(), TKmer::N_BYTES);
+            if (bm->Check(mer.GetBytes(), TKmer::N_BYTES))
+            {
+                /*
+                 * With high probability, the k-mer has already been
+                 * inserted into the filter, and therefore is likely not a
+                 * singleton k-mer. Insert it into local hash table partition
+                 * if it hasn't already been.
+                 */
+                if (kmermap.find(mer) == kmermap.end())
+                    kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
+            }
+            else
+            {
+                /*
+                 * k-mer definitely hasn't been seen before, therefore we
+                 * add it to the Bloom filter. If this k-mer is a singleton,
+                 * then we have effectively filtered it away from being
+                 * queried on the local hash table.
+                 */
+                bm->Add(mer.GetBytes(), TKmer::N_BYTES);
+            }
         }
-    }
+    } while (!batch_state.Finished());
 
     return kmermap;
 }
