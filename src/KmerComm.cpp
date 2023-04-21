@@ -15,112 +15,69 @@ static_assert(USE_BLOOM == 0);
 
 KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommGrid> commgrid)
 {
-    std::unique_ptr<std::ostringstream> logstream;
-    KmerCountMap kmermap;
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
-    size_t numreads = myreads.size();
-    HyperLogLog hll(12);
-    KmerEstimateHandler estimator(hll);
-    ForeachKmer(myreads, estimator);
-    double mycardinality = hll.Estimate();
-    logstream.reset(new std::ostringstream());
-    *logstream << "my computed 'column' k-mer cardinality estimate is " << mycardinality;
-    LogAll(logstream->str(), commgrid);
-    hll.ParallelMerge(commgrid->GetWorld());
-    double cardinality = hll.Estimate();
-    size_t avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
-    if (!myrank) std::cout << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor\n" << std::endl;
-    MPI_Barrier(commgrid->GetWorld());
+
+    KmerCountMap kmermap;
+    HyperLogLog hll;
+    size_t numreads;
+    size_t avgcardinality;
+    double cardinality;
+    double mycardinality;
     Vector<Vector<TKmer>> kmerbuckets(nprocs);
-    KmerPartitionHandler partitioner(kmerbuckets);
-    ForeachKmer(myreads, partitioner);
     Vector<MPI_Count_type> sendcnt(nprocs), recvcnt(nprocs);
     Vector<MPI_Displ_type> sdispls(nprocs), rdispls(nprocs);
-    logstream.reset(new std::ostringstream());
-    *logstream << std::setprecision(4) << "sending 'row' k-mers to each processor in this amount (megabytes): {";
+    Vector<uint8_t> sendbuf, recvbuf;
+    size_t totsend, totrecv;
+    size_t numkmerseeds;
+
+    numreads = myreads.size();
+    KmerEstimateHandler estimator(hll);
+    ForeachKmer(myreads, estimator);
+    mycardinality = hll.Estimate();
+    hll.ParallelMerge(commgrid->GetWorld());
+    cardinality = hll.Estimate();
+    avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
+    kmermap.reserve(avgcardinality);
+    bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
+    KmerPartitionHandler partitioner(kmerbuckets);
+    ForeachKmer(myreads, partitioner);
     for (int i = 0; i < nprocs; ++i)
     {
         sendcnt[i] = kmerbuckets[i].size() * TKmer::N_BYTES;
-        *logstream << (static_cast<double>(sendcnt[i]) / (1024 * 1024)) << ",";
     }
-    *logstream << "}";
-    LogAll(logstream->str(), commgrid);
     MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
     sdispls.front() = rdispls.front() = 0;
     std::partial_sum(sendcnt.begin(), sendcnt.end()-1, sdispls.begin()+1);
     std::partial_sum(recvcnt.begin(), recvcnt.end()-1, rdispls.begin()+1);
-    int64_t totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
-    int64_t totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
-    Vector<uint8_t> sendbuf(totsend, 0);
+    totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
+    totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
+    sendbuf.resize(totsend, 0);
     for (int i = 0; i < nprocs; ++i)
     {
-        assert(kmerbuckets[i].size() == (sendcnt[i] / TKmer::N_BYTES));
-        uint8_t *addrs2fill = sendbuf.data() + sdispls[i];
+        uint8_t *dest = sendbuf.data() + sdispls[i];
         for (MPI_Count_type j = 0; j < kmerbuckets[i].size(); ++j)
         {
-            (kmerbuckets[i][j]).CopyDataInto(addrs2fill);
-            addrs2fill += TKmer::N_BYTES;
+            memcpy(dest, kmerbuckets[i][j].GetBytes(), TKmer::N_BYTES);
+            dest += TKmer::N_BYTES;
         }
         kmerbuckets[i].clear();
     }
-    Vector<uint8_t> recvbuf(totrecv, 0);
+    recvbuf.resize(totrecv, 0);
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
-    size_t rowkmers_received = static_cast<size_t>(totrecv / TKmer::N_BYTES);
-    logstream.reset(new std::ostringstream());
-    *logstream << "received a total of " << rowkmers_received << " 'row' k-mers in first ALLTOALL exchange";
-    LogAll(logstream->str(), commgrid);
-    kmermap.reserve(avgcardinality);
-#if USE_BLOOM == 1
-    bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
-#else
-    static_assert(USE_BLOOM == 0);
-#endif
-    uint64_t numkmerseeds = totrecv / TKmer::N_BYTES;
-    uint8_t *addrs2read = recvbuf.data();
-    for (uint64_t i = 0; i < numkmerseeds; ++i)
+    numkmerseeds = totrecv / TKmer::N_BYTES;
+    uint8_t *src = recvbuf.data();
+    for (size_t i = 0; i < numkmerseeds; ++i)
     {
-        TKmer mer(addrs2read);
-        addrs2read += TKmer::N_BYTES;
-#if USE_BLOOM == 1
+        TKmer mer(src);
+        src += TKmer::N_BYTES;
         if (bm->Check(mer.GetBytes(), TKmer::N_BYTES))
         {
             if (kmermap.find(mer) == kmermap.end())
-            {
                 kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
-            }
         }
-        else
-        {
-            bm->Add(mer.GetBytes(), TKmer::N_BYTES);
-        }
-#else
-        static_assert(USE_BLOOM == 0);
-        if (kmermap.find(mer) == kmermap.end())
-        {
-            kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
-        }
-#endif
+        else bm->Add(mer.GetBytes(), TKmer::N_BYTES);
     }
-    logstream.reset(new std::ostringstream());
-    *logstream << rowkmers_received;
-#if USE_BLOOM == 1
-    *logstream << " row k-mers filtered by Bloom filter and hash table into " << kmermap.size() << " likely non-singleton 'column' k-mers";
-#else
-    *logstream << " row k-mers filtered by hash table into " << kmermap.size() << " 'column' k-mers";
-#endif
-    LogAll(logstream->str(), commgrid);
-    size_t numkmers = kmermap.size();
-    MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
-    if (!myrank)
-    {
-#if USE_BLOOM == 1
-        std::cout << "A total of " << numkmers << " likely non-singleton 'column' k-mers found\n" << std::endl;
-#else
-        std::cout << "A total of " << numkmers << " 'column' k-mers found\n" << std::endl;
-#endif
-    }
-    MPI_Barrier(commgrid->GetWorld());
     return kmermap;
 }
 
