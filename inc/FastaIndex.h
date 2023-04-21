@@ -11,20 +11,19 @@ public:
     FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid);
 
     SharedPtr<CommGrid> getcommgrid() const { return commgrid; }
-    const Vector<faidx_record_t>& getrecords() const { return records; }
+    Vector<String> GetAllReads() { return GetReadsFromRecords(allrecords); }
     Vector<String> GetMyReads();
-    // static Vector<String> GetMyReads(const FastaIndex& index);
-
-    void PrintInfo() const;
 
     String GetFastaFilename() const { return fasta_fname; }
     String GetFaidxFilename() const { return fasta_fname + ".fai"; }
 
 private:
     SharedPtr<CommGrid> commgrid;
-    Vector<faidx_record_t> records;
+    Vector<faidx_record_t> myrecords, allrecords;
     Vector<String> names;
     String fasta_fname;
+
+    Vector<String> GetReadsFromRecords(const Vector<faidx_record_t>& records);
 };
 
 #endif

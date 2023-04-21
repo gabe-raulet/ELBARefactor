@@ -26,7 +26,6 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
     Vector<MPI_Displ_type> displs;     /* MPI_Scatterv displs for faidx_record_t records (root only)     */
     MPI_Count_type recvcount;          /* MPI_Scatterv recvcount for faidx_record_t records              */
 
-    Vector<faidx_record_t> root_records;
     Vector<String> root_names;
 
     if (myrank == 0)
@@ -36,12 +35,12 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
 
         while (std::getline(filestream, line))
         {
-            root_records.push_back(GetFaidxRecord(line, root_names));
+            allrecords.push_back(GetFaidxRecord(line, root_names));
         }
 
         filestream.close();
 
-        MPI_Count_type num_records = root_records.size();
+        MPI_Count_type num_records = allrecords.size();
 
         sendcounts.resize(nprocs);
         displs.resize(nprocs);
@@ -62,20 +61,19 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
      */
     MPI_SCATTER(sendcounts.data(), 1, MPI_COUNT_TYPE, &recvcount, 1, MPI_COUNT_TYPE, 0, commgrid->GetWorld());
 
-    records.resize(recvcount);
+    myrecords.resize(recvcount);
 
     MPI_Datatype faidx_dtype_t;
     MPI_Type_contiguous(3, MPI_SIZE_T, &faidx_dtype_t);
     MPI_Type_commit(&faidx_dtype_t);
-    MPI_SCATTERV(root_records.data(), sendcounts.data(), displs.data(), faidx_dtype_t, records.data(), recvcount, faidx_dtype_t, 0, commgrid->GetWorld());
+    MPI_SCATTERV(allrecords.data(), sendcounts.data(), displs.data(), faidx_dtype_t, myrecords.data(), recvcount, faidx_dtype_t, 0, commgrid->GetWorld());
     MPI_Type_free(&faidx_dtype_t);
 }
 
-Vector<String> FastaIndex::GetMyReads()
+Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& records)
 {
     Vector<String> reads;
 
-    const Vector<faidx_record_t>& records = getrecords();
     size_t num_records = records.size();
 
     reads.reserve(num_records);
@@ -129,71 +127,20 @@ Vector<String> FastaIndex::GetMyReads()
     }
 
     delete[] seqbuf;
+    return reads;
+}
+
+Vector<String> FastaIndex::GetMyReads()
+{
+    Vector<String> reads = GetReadsFromRecords(myrecords);
 
     size_t mynumreads = reads.size();
-    size_t mytotbases = std::accumulate(records.begin(), records.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
+    size_t mytotbases = std::accumulate(myrecords.begin(), myrecords.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
     double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
 
     size_t myreadoffset;
     MPI_Exscan(&mynumreads, &myreadoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
     if (commgrid->GetRank() == 0) myreadoffset = 0;
 
-    // if (!myrank)
-    // {
-        // std::cout << "rank[myrank/nprocs] :: {numreads} {[start_readid..end_readid+1)} {average read length} {number of megabytes}\n";
-                  // << "============================================================================================================\n" << std::endl;
-    // }
-
-    //std::ostringstream ss;
-    //ss << std::fixed << std::setprecision(3) << mynumreads << " myreadoffset << ".." << myreadoffset+mynumreads << ") with an average length of " << myavglen << " nucleotides each (" << (static_cast<double>(mytotbases) / (1024.0 * 1024.0)) << " megabytes) from FASTA " << fasta_fname;
-
-
     return reads;
-}
-
-void FastaIndex::PrintInfo() const
-{
-    size_t mynumreads = records.size();
-    size_t mytotbases = std::accumulate(records.begin(), records.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
-    double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
-
-    std::ostringstream ss;
-
-    ss << "P(" << commgrid->GetRankInProcCol() << ", " << commgrid->GetRankInProcRow() << ") will store " << mynumreads << " reads with an average length of " << myavglen << " nucleotides each";
-
-    String myline = ss.str();
-    char const *sendbuf = myline.c_str();
-    MPI_Count_type sendcnt = myline.size();
-
-    int myrank = commgrid->GetRank();
-    int nprocs = commgrid->GetSize();
-
-    Vector<MPI_Count_type> recvcnts;
-    Vector<MPI_Displ_type> displs;
-
-    if (myrank == 0) { recvcnts.resize(nprocs); displs.resize(nprocs); }
-
-    MPI_GATHER(&sendcnt, 1, MPI_COUNT_TYPE, recvcnts.data(), 1, MPI_COUNT_TYPE, 0, commgrid->GetWorld());
-
-    char *recvbuf = NULL;
-
-    if (myrank == 0)
-    {
-        displs.front() = 0;
-        std::partial_sum(recvcnts.begin(), recvcnts.end()-1, displs.begin()+1);
-        recvbuf = new char[displs.back() + recvcnts.back()];
-    }
-
-    MPI_GATHERV(sendbuf, sendcnt, MPI_CHAR, recvbuf, recvcnts.data(), displs.data(), MPI_CHAR, 0, commgrid->GetWorld());
-
-    if (myrank == 0)
-    {
-        for (int i = 0; i < nprocs; ++i)
-        {
-            String line = String(recvbuf + displs[i], recvcnts[i]);
-            std::cerr << line << std::endl;
-        }
-
-        delete[] recvbuf;
-    }
 }
