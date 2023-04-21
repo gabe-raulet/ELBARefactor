@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
 
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
 
-        // XDropAligner aligner(allreads, 1, -1, -1, 15, commgrid);
-        // aligner.Apply(B);
+        XDropAligner aligner(allreads, 1, -1, -1, 15, commgrid);
+        aligner.Apply(B);
     }
 
     MPI_Finalize();
