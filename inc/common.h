@@ -41,6 +41,8 @@ using Tuple = std::tuple<Types...>;
 template <class T>
 using Hash = std::hash<T>;
 
+using Grid = SharedPtr<CommGrid>;
+
 #if MPI_VERSION == 3
 #define MPI_HAS_LARGE_COUNTS 0
 

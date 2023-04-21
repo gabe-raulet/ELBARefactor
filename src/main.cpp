@@ -4,40 +4,117 @@
 #include <cstdint>
 #include <cassert>
 #include <numeric>
+#include <unistd.h>
 #include <mpi.h>
 #include "common.h"
+#include "compiletime.h"
 #include "FastaIndex.h"
 #include "Logger.h"
 
-String fasta_fname = "data/reads.fa";
+int returncode;
+String fasta_fname;
+/*
+ * X-Drop alignment parameters.
+ */
+int mat = 1;
+int mis = -1;
+int gap = -1;
+int xdrop_cutoff = 15;
+
+constexpr int root = 0;
+
+void usage(char const *prg);
 
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);
 
-    if (argc == 2) fasta_fname.assign(argv[1]);
-
     {
-        MPI_Comm gridworld = MPI_COMM_WORLD;
-        auto commgrid = SharedPtr<CommGrid>(new CommGrid(gridworld, 0, 0));
+        MPI_Comm comm = MPI_COMM_WORLD;
+        auto commgrid = Grid(new CommGrid(comm, 0, 0));
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
+        int params[5] = {mat, mis, gap, xdrop_cutoff};
+        int show_help = 0;
 
-        if (!myrank)
+        if (myrank == root)
         {
-            std::cout << "-DKMER_SIZE=" << KMER_SIZE << " "
-                      << "-DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << " "
-                      << "-DUPPER_KMER_FREQ=" << UPPER_KMER_FREQ << " "
-                      << "-DUSE_BLOOM=" << USE_BLOOM << "\n" << std::endl;
+            int c;
+
+            while ((c = getopt(argc, argv, "x:A:B:G:h")) >= 0)
+            {
+                if      (c == 'A') params[0] =  atoi(optarg);
+                else if (c == 'B') params[1] = -atoi(optarg);
+                else if (c == 'G') params[2] = -atoi(optarg);
+                else if (c == 'x') params[3] =  atoi(optarg);
+                else if (c == 'h') show_help = 1;
+            }
         }
 
-        MPI_Barrier(gridworld);
+        MPI_BCAST(params, 4, MPI_INT, root, comm);
 
-        FastaIndex index(fasta_fname, commgrid);
-        Vector<String> myreads = index.GetMyReads();
+        mat          = params[0];
+        mis          = params[1];
+        gap          = params[2];
+        xdrop_cutoff = params[3];
 
+        if (myrank == root && show_help)
+            usage(argv[0]);
+
+        MPI_BCAST(&show_help, 1, MPI_INT, root, comm);
+        if (show_help) goto err;
+
+        int fasta_provided = 1;
+        if (myrank == root && optind + 1 != argc)
+        {
+            std::cerr << "error: missing FASTA file" << std::endl;
+            usage(argv[0]);
+            fasta_provided = 0;
+        }
+
+        MPI_BCAST(&fasta_provided, 1, MPI_INT, root, comm);
+        if (!fasta_provided) goto err;
+
+        if (myrank == root)
+        {
+            fasta_fname = argv[optind];
+
+            std::cout << "-DKMER_SIZE="       << KMER_SIZE       << "\n"
+                      << "-DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << "\n"
+                      << "-DUPPER_KMER_FREQ=" << UPPER_KMER_FREQ << "\n"
+            #ifdef USE_BLOOM
+                      << "-DUSE_BLOOM\n"
+            #endif
+                      << "\n"
+                      << "int mat = "          << mat          <<   ";\n"
+                      << "int mis = "          << mis          <<   ";\n"
+                      << "int gap = "          << gap          <<   ";\n"
+                      << "int xdrop_cutoff = " << xdrop_cutoff <<   ";\n"
+                      << "String fname = \""   << fasta_fname  << "\";\n"
+                      << std::endl;
+        }
+
+        MPI_Barrier(comm);
+
+        // FastaIndex index(fasta_fname, commgrid);
+        // Vector<String> myreads = index.GetMyReads();
+
+        goto done;
     }
 
+err: returncode = -1;
+done:
     MPI_Finalize();
-    return 0;
+    return returncode;
+}
+
+void usage(char const *prg)
+{
+    std::cerr << "Usage: " << prg << " [options] <reads.fa>\n"
+              << "Options: -x INT   x-drop alignment threshold [" <<  xdrop_cutoff << "]\n"
+              << "         -A INT   matching score ["             <<  mat          << "]\n"
+              << "         -B INT   mismatch penalty ["           << -mis          << "]\n"
+              << "         -G INT   gap penalty ["                << -gap          << "]\n"
+              << "         -h       help message"
+              << std::endl;
 }

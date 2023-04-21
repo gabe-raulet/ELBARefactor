@@ -1,8 +1,8 @@
 K?=31
 L?=20
 U?=30
-BF?=1
-COMPILE_TIME_PARAMETERS=-DKMER_SIZE=$(K) -DLOWER_KMER_FREQ=$(L) -DUPPER_KMER_FREQ=$(U) -DUSE_BLOOM=$(BF)
+COMPILE_TIME_PARAMETERS=-DKMER_SIZE=$(K) -DLOWER_KMER_FREQ=$(L) -DUPPER_KMER_FREQ=$(U) -DUSE_BLOOM_FILTER
+
 MPICH=/usr/local/Cellar/mpich/4.1.1
 MPICH_INC=-I$(MPICH)/include
 MPICH_LIB=-L$(MPICH)/lib
@@ -26,28 +26,28 @@ endif
 
 all: elba
 
-elba: main.o FastaIndex.o CommGrid.o MPIType.o Logger.o
+elba: obj/main.o obj/FastaIndex.o obj/CommGrid.o obj/MPIType.o obj/Logger.o
 	@echo CXX -c -o $@ $^
 	@$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
 
-%.o: src/%.cpp
+obj/%.o: src/%.cpp
 	@echo CXX $(COMPILE_TIME_PARAMETERS) -c -o $@ $<
 	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
-main.o: src/main.cpp inc/common.h
-FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h
-Logger.o: src/Logger.cpp inc/Logger.h
+obj/main.o: src/main.cpp inc/common.h
+obj/FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h
+obj/Logger.o: src/Logger.cpp inc/Logger.h
 
-CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h
+obj/CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h
 	@echo CXX -c -o $@ $<
 	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
-MPIType.o: $(COMBBLAS_SRC)/MPIType.cpp $(COMBBLAS_INC)/MPIType.h
+obj/MPIType.o: $(COMBBLAS_SRC)/MPIType.cpp $(COMBBLAS_INC)/MPIType.h
 	@echo CXX -c -o $@ $<
 	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
 clean:
-	rm -rf *.o *.dSYM *.out *.mtx
+	rm -rf *.o obj/*.o *.dSYM *.out *.mtx
 
 gitclean: clean
 	git clean -f
