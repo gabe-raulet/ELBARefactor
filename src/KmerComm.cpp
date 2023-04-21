@@ -121,19 +121,42 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
      */
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
 
+    /*
+     * Unpack incoming k-mers in a streaming fashion.
+     */
     numkmerseeds = totrecv / TKmer::N_BYTES;
     uint8_t *src = recvbuf.data();
     for (size_t i = 0; i < numkmerseeds; ++i)
     {
         TKmer mer(src);
         src += TKmer::N_BYTES;
+
+        /*
+         * Check if incoming k-mer is already "inside" the local Bloom filter.
+         */
         if (bm->Check(mer.GetBytes(), TKmer::N_BYTES))
         {
+            /*
+             * With high probability, the k-mer has already been
+             * inserted into the filter, and therefore is likely not a
+             * singleton k-mer. Insert it into local hash table partition
+             * if it hasn't already been.
+             */
             if (kmermap.find(mer) == kmermap.end())
                 kmermap.insert({mer, KmerCountEntry({}, {}, 0)});
         }
-        else bm->Add(mer.GetBytes(), TKmer::N_BYTES);
+        else
+        {
+            /*
+             * k-mer definitely hasn't been seen before, therefore we
+             * add it to the Bloom filter. If this k-mer is a singleton,
+             * then we have effectively filtered it away from being
+             * queried on the local hash table.
+             */
+            bm->Add(mer.GetBytes(), TKmer::N_BYTES);
+        }
     }
+
     return kmermap;
 }
 
