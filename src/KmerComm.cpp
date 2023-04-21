@@ -57,7 +57,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
-    rootlog << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor\n" << std::endl;
+    rootlog << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor" << std::endl;
     log.Flush(rootlog, 0);
 
     /*
@@ -287,7 +287,8 @@ void GetKmerCountMapValues(const Vector<String>& myreads, KmerCountMap& kmermap,
     auto itr = kmermap.begin();
     while (itr != kmermap.end())
     {
-        itr = std::get<2>(itr->second) < LOWER_KMER_FREQ? kmermap.erase(itr) : ++itr;
+        if (std::get<2>(itr->second) < LOWER_KMER_FREQ) itr = kmermap.erase(itr);
+        else itr++;
     }
     size_t numkmers = kmermap.size();
     MPI_Allreduce(MPI_IN_PLACE, &numkmers, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());

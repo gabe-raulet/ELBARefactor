@@ -19,8 +19,8 @@
 #ifndef MAX_ALLTOALL_MEM
 // #define MAX_ALLTOALL_MEM (1024)
 // #define MAX_ALLTOALL_MEM (128 * 1024)
-// #define MAX_ALLTOALL_MEM (128 * 1024 * 1024)
-#define MAX_ALLTOALL_MEM (32 * 1024 * 1024)
+#define MAX_ALLTOALL_MEM (128 * 1024 * 1024)
+// #define MAX_ALLTOALL_MEM (32 * 1024 * 1024)
 #endif
 
 typedef uint16_t PosInRead;

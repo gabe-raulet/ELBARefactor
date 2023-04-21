@@ -52,7 +52,7 @@ MPIType.o: $(COMBBLAS_SRC)/MPIType.cpp $(COMBBLAS_INC)/MPIType.h
 	@$(COMPILER) $(FLAGS) $(INCADD) -c -o $@ $<
 
 clean:
-	rm -rf *.o *.dSYM *.out
+	rm -rf *.o *.dSYM *.out *.mtx
 
 gitclean: clean
 	git clean -f
