@@ -12,7 +12,7 @@ int intplus(int a, int b)
 
 void ReadOverlap::SetPathInf() { sfxpath[0] = sfxpath[1] = sfxpath[2] = sfxpath[3] = MAX_INT; }
 
-ReadOverlap::ReadOverlap() : sfx(0), dir(-1), score(-1), count(1), transpose(false), passed(false) { SetPathInf(); }
+ReadOverlap::ReadOverlap() : sfx(0), dir(-1), score(-1), begQs{}, begTs{}, b{}, e{}, l{}, coords{}, count(1), transpose(false), passed(false) { SetPathInf(); }
 
 ReadOverlap::ReadOverlap(int count) : ReadOverlap() { this->count = count; }
 

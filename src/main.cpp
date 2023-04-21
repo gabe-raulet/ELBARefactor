@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
 
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
 
-        XDropAligner aligner(allreads, 1, -1, -1, 15, commgrid);
-        aligner.Apply(B);
+        // XDropAligner aligner(allreads, 1, -1, -1, 15, commgrid);
+        // aligner.Apply(B);
     }
 
     MPI_Finalize();
@@ -164,5 +164,5 @@ CT<PosInRead>::PSpParMat CreateKmerMatrix(const Vector<String>& myreads, const K
     CT<uint64_t>::PDistVec dcols(local_colids, commgrid);
     CT<PosInRead>::PDistVec dvals(local_positions, commgrid);
 
-    return CT<PosInRead>::PSpParMat(totreads, totkmers, drows, dcols, dvals, true);
+    return CT<PosInRead>::PSpParMat(totreads, totkmers, drows, dcols, dvals, false);
 }
