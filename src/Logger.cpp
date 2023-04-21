@@ -32,7 +32,7 @@ void LogAll(const String mylog, SharedPtr<CommGrid> commgrid)
         for (int i = 0; i < nprocs; ++i)
         {
             String message(buf + displs[i], recvcnt[i]);
-            std::cout << "processor[" << i+1 << "/" << nprocs << "] says '" << message << "'" << std::endl;
+            std::cout << "rank[" << i+1 << "/" << nprocs << "] :: " << message << std::endl;
         }
         std::cout << std::endl;
     }

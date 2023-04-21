@@ -30,6 +30,7 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     Vector<uint8_t> sendbuf, recvbuf;                         /* My processor's ALLTOALL send and receive buffers of k-mers (packed) */
     size_t totsend, totrecv;                                  /* My processor's total number of send and receive bytes */
     size_t numkmerseeds;                                      /* Total number of k-mer seeds received by my processor after unpacked recweive buffer */
+    std::unique_ptr<std::ostringstream> logstream;            /* Single string for logging purposes */
 
     /*
      * Estimate the number of distinct k-mers in my local FASTA
@@ -38,6 +39,16 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     KmerEstimateHandler estimator(hll);
     ForeachKmer(myreads, estimator);
     mycardinality = hll.Estimate();
+
+    logstream.reset(new std::ostringstream());
+    *logstream << mycardinality << " k-mers";
+
+    if (!myrank)
+    {
+        std::cout << "k-mer cardinality estimates:\n" << std::endl;
+    }
+
+    LogAll(logstream->str(), commgrid);
 
     /*
      * Estimate the number of distinct k-mers in the entire FASTA
