@@ -18,53 +18,109 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
 
-    KmerCountMap kmermap;
-    HyperLogLog hll;
-    size_t numreads;
-    size_t avgcardinality;
-    double cardinality;
-    double mycardinality;
-    Vector<Vector<TKmer>> kmerbuckets(nprocs);
-    Vector<MPI_Count_type> sendcnt(nprocs), recvcnt(nprocs);
-    Vector<MPI_Displ_type> sdispls(nprocs), rdispls(nprocs);
-    Vector<uint8_t> sendbuf, recvbuf;
-    size_t totsend, totrecv;
-    size_t numkmerseeds;
+    KmerCountMap kmermap;                                     /* Received k-mers will be stored in this local hash table */
+    HyperLogLog hll;                                          /* HyperLogLog counter initialized with 12 bits as default */
+    size_t avgcardinality;                                    /* Average estimate for number of distinct k-mers per procesor (via Hyperloglog)*/
+    double cardinality;                                       /* Total estimate for number of distinct k-mers in dataset (via Hyperloglog) */
+    double mycardinality;                                     /* Local estimate for number of distinct k-mers originating on my processor (via Hyperloglog) */
+    Vector<Vector<TKmer>> kmerbuckets(nprocs);                /* My processor's outgoing k-mer seed buckets, one for each destination processor */
+    Vector<MPI_Count_type> sendcnt(nprocs), recvcnt(nprocs);  /* My processor's ALLTOALL send and receive counts for phase one k-mer exchange */
+    Vector<MPI_Displ_type> sdispls(nprocs), rdispls(nprocs);  /* My processor's ALLTOALL send and receive displacements */
+    Vector<uint8_t> sendbuf, recvbuf;                         /* My processor's ALLTOALL send and receive buffers of k-mers (packed) */
+    size_t totsend, totrecv;                                  /* My processor's total number of send and receive bytes */
+    size_t numkmerseeds;                                      /* Total number of k-mer seeds received by my processor after unpacked recweive buffer */
 
-    numreads = myreads.size();
+    /*
+     * Estimate the number of distinct k-mers in my local FASTA
+     * partition.
+     */
     KmerEstimateHandler estimator(hll);
     ForeachKmer(myreads, estimator);
     mycardinality = hll.Estimate();
+
+    /*
+     * Estimate the number of distinct k-mers in the entire FASTA
+     * by merging Hyperloglog counters from each processor.
+     */
     hll.ParallelMerge(commgrid->GetWorld());
     cardinality = hll.Estimate();
     avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
+
+    /*
+     * Reserve memory for local hash table and Bloom filter using
+     * distinct k-mer count estimates.
+     */
     kmermap.reserve(avgcardinality);
     bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
+
+    /*
+     * Distribute k-mers parsed from local FASTA partition into
+     * outgoing k-mer buckets (buckets are staging area for
+     * packing ALLTOALL send buffer). Uses hash function to
+     * determine destination processor, so that the number of
+     * distinct k-mers sent to each processor is roughly equal.
+     *
+     * Note that the number of distinct k-mers not same as number of k-mers being sent.
+     * The hash function attempts to balance the load of distinct k-mers
+     * sent to each processor, not the number of individually packed k-mers
+     * received by each processor. This is because the received k-mers are
+     * immediately queried against a Bloom filter and hash table keyed
+     * by the distinct k-mer.
+     */
     KmerPartitionHandler partitioner(kmerbuckets);
     ForeachKmer(myreads, partitioner);
-    for (int i = 0; i < nprocs; ++i)
-    {
-        sendcnt[i] = kmerbuckets[i].size() * TKmer::N_BYTES;
-    }
-    MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
-    sdispls.front() = rdispls.front() = 0;
+
+    /*
+     * ALLTOALL send counts: Number of k-mers my processor is sending to each other processor.
+     */
+    std::transform(kmerbuckets.cbegin(), kmerbuckets.cend(), sendcnt.begin(), [](const auto& bucket) { return bucket.size() * TKmer::N_BYTES; });
+
+    /*
+     * ALLTOALL send displacements and total k-mers sending.
+     */
+    sdispls.front() = 0;
     std::partial_sum(sendcnt.begin(), sendcnt.end()-1, sdispls.begin()+1);
+    totsend = sdispls.back() + sendcnt.back();
+
+    /*
+     * ALLTOALL receive counts: Number of k-mers my processor will receive from each other processor.
+     */
+    MPI_ALLTOALL(sendcnt.data(), 1, MPI_COUNT_TYPE, recvcnt.data(), 1, MPI_COUNT_TYPE, commgrid->GetWorld());
+
+    /*
+     * ALLTOALL receive displacements and total k-mers receiving.
+     */
+    rdispls.front() = 0;
     std::partial_sum(recvcnt.begin(), recvcnt.end()-1, rdispls.begin()+1);
-    totsend = std::accumulate(sendcnt.begin(), sendcnt.end(), 0);
-    totrecv = std::accumulate(recvcnt.begin(), recvcnt.end(), 0);
+    totrecv = rdispls.back() + recvcnt.back();
+
+    /*
+     * Allocate memory for send and receive buffers.
+     */
     sendbuf.resize(totsend, 0);
+    recvbuf.resize(totrecv, 0);
+
+    /*
+     * Pack outgoing k-mers into send buffer.
+     */
     for (int i = 0; i < nprocs; ++i)
     {
         uint8_t *dest = sendbuf.data() + sdispls[i];
+
         for (MPI_Count_type j = 0; j < kmerbuckets[i].size(); ++j)
         {
             memcpy(dest, kmerbuckets[i][j].GetBytes(), TKmer::N_BYTES);
             dest += TKmer::N_BYTES;
         }
+
         kmerbuckets[i].clear();
     }
-    recvbuf.resize(totrecv, 0);
+
+    /*
+     * Communicate locally parsed k-mers to other processors in ALLTOALL fashion.
+     */
     MPI_ALLTOALLV(sendbuf.data(), sendcnt.data(), sdispls.data(), MPI_BYTE, recvbuf.data(), recvcnt.data(), rdispls.data(), MPI_BYTE, commgrid->GetWorld());
+
     numkmerseeds = totrecv / TKmer::N_BYTES;
     uint8_t *src = recvbuf.data();
     for (size_t i = 0; i < numkmerseeds; ++i)
