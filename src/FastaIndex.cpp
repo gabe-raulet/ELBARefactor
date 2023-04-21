@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iostream>
 
+typedef typename FastaIndex::faidx_record_t faidx_record_t;
+
 faidx_record_t GetFaidxRecord(const String& line, Vector<String>& names)
 {
     String name;
@@ -128,6 +130,33 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
 
     delete[] seqbuf;
     return reads;
+}
+
+Vector<String> FastaIndex::GetAllReads()
+{
+    MPI_Datatype faidx_dtype_t;
+    MPI_Type_contiguous(3, MPI_SIZE_T, &faidx_dtype_t);
+    MPI_Type_commit(&faidx_dtype_t);
+
+    MPI_Count_type count;
+
+    if (commgrid->GetRank() == 0)
+    {
+        count = allrecords.size();
+    }
+
+    MPI_BCAST(&count, 1, MPI_COUNT_TYPE, 0, commgrid->GetWorld());
+
+    if (commgrid->GetRank() != 0)
+    {
+        allrecords.resize(count);
+    }
+
+    MPI_BCAST(allrecords.data(), count, faidx_dtype_t, 0, commgrid->GetWorld());
+
+    MPI_Type_free(&faidx_dtype_t);
+
+    return GetReadsFromRecords(allrecords);
 }
 
 Vector<String> FastaIndex::GetMyReads()

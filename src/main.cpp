@@ -11,6 +11,7 @@
 #include "FastaIndex.h"
 #include "ReadOverlap.h"
 #include "KmerIntersect.h"
+#include "XDropAligner.h"
 #include "Logger.h"
 
 String fasta_fname = "data/reads.fa";
@@ -77,7 +78,12 @@ int main(int argc, char *argv[])
         }
         MPI_Barrier(gridworld);
 
+        Vector<String> allreads = index.GetAllReads();
+
         B.ParallelWriteMM("B.mtx", false, OverlapHandler());
+
+        XDropAligner aligner(allreads, 1, -1, -1, 15, commgrid);
+        aligner.Apply(B);
     }
 
     MPI_Finalize();

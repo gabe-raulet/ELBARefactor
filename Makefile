@@ -26,7 +26,7 @@ endif
 
 all: elba
 
-elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o CommGrid.o MPIType.o Logger.o
+elba: main.o HashFuncs.o FastaIndex.o KmerComm.o Bloom.o HyperLogLog.o ReadOverlap.o XDropAligner.o CommGrid.o MPIType.o Logger.o
 	@echo CXX -c -o $@ $^
 	@$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
 
@@ -39,8 +39,9 @@ FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h
 HyperLogLog.o: src/HyperLogLog.cpp inc/HyperLogLog.h
 HashFuncs.o: src/HashFuncs.cpp inc/HashFuncs.h
 KmerComm.o: src/KmerComm.cpp inc/KmerComm.h inc/Bloom.h
-Bloom.o: src/Bloom.cpp inc/Bloom.h
 ReadOverlap.o: src/ReadOverlap.cpp inc/ReadOverlap.h
+XDropAligner.o: src/XDropAligner.cpp inc/XDropAligner.h
+Bloom.o: src/Bloom.cpp inc/Bloom.h
 Logger.o: src/Logger.cpp inc/Logger.h
 
 CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h

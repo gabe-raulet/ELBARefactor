@@ -55,6 +55,7 @@ using MPI_Displ_type = int;
 #define MPI_SCATTERV MPI_Scatterv
 #define MPI_GATHER MPI_Gather
 #define MPI_GATHERV MPI_Gatherv
+#define MPI_BCAST MPI_Bcast
 #define MPI_FILE_READ_AT_ALL MPI_File_read_at_all
 
 #elif MPI_VERSION == 4
@@ -71,6 +72,7 @@ using MPI_Displ_type = MPI_Aint;
 #define MPI_SCATTERV MPI_Scatterv_c
 #define MPI_GATHER MPI_Gather_c
 #define MPI_GATHERV MPI_Gatherv_c
+#define MPI_BCAST MPI_Bcast_c
 #define MPI_FILE_READ_AT_ALL MPI_File_read_at_all_c
 
 #else

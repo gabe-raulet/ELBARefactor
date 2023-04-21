@@ -3,15 +3,15 @@
 
 #include "common.h"
 
-typedef struct faidx_record { size_t len, pos, bases; } faidx_record_t;
-
 class FastaIndex
 {
 public:
+    typedef struct faidx_record { size_t len, pos, bases; } faidx_record_t;
+
     FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid);
 
     SharedPtr<CommGrid> getcommgrid() const { return commgrid; }
-    Vector<String> GetAllReads() { return GetReadsFromRecords(allrecords); }
+    Vector<String> GetAllReads();
     Vector<String> GetMyReads();
 
     String GetFastaFilename() const { return fasta_fname; }
