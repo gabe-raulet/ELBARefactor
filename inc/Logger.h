@@ -18,6 +18,7 @@ class Logger
 public:
     Logger(SharedPtr<CommGrid> commgrid);
     void Flush(char const *label);
+    void Flush(std::ostringstream& ss);
     void Flush(std::ostringstream& ss, int rank);
     std::ostringstream& operator()() { return *logstream; }
 };

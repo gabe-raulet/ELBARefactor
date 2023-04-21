@@ -26,6 +26,13 @@ String Logger::prefix()
     return name;
 }
 
+void Logger::Flush(std::ostringstream& ss)
+{
+    Flush(ss.str().c_str());
+    ss.clear();
+    ss.str("");
+}
+
 void Logger::Flush(std::ostringstream& ss, int rank)
 {
     if (rank == myrank)

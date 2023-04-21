@@ -30,6 +30,10 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     Vector<uint8_t> sendbuf, recvbuf;                         /* My processor's ALLTOALL send and receive buffers of k-mers (packed) */
     size_t totsend, totrecv;                                  /* My processor's total number of send and receive bytes */
     size_t numkmerseeds;                                      /* Total number of k-mer seeds received by my processor after unpacked recweive buffer */
+    Logger log(commgrid);
+    std::ostringstream rootlog;
+
+    numreads = myreads.size();
 
     /*
      * Estimate the number of distinct k-mers in my local FASTA
@@ -39,10 +43,9 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     ForeachKmer(myreads, estimator);
     mycardinality = hll.Estimate();
 
-    Logger log(commgrid);
     log() << std::setprecision(3) << std::fixed << mycardinality << " k-mers";
 
-    log.Flush("{k-mer cardinality estimate}\n"
+    log.Flush("[k-mer cardinality estimate]\n"
               "============================\n");
 
     /*
@@ -54,7 +57,6 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
 
     avgcardinality = static_cast<size_t>(std::ceil(cardinality / nprocs));
 
-    std::ostringstream rootlog;
     rootlog << "global 'column' k-mer cardinality (merging all " << nprocs << " procesors results) is " << cardinality << ", or an average of " << avgcardinality << " per processor\n" << std::endl;
     log.Flush(rootlog, 0);
 
@@ -66,6 +68,10 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
     bm = new Bloom(static_cast<int64_t>(std::ceil(cardinality)), 0.05);
 
     BatchState batch_state(myreads.size(), commgrid);
+
+    int batch_round = 1;
+
+    size_t total_totsend = 0, total_totrecv = 0;
 
     do
     {
@@ -172,6 +178,14 @@ KmerCountMap GetKmerCountMapKeys(const Vector <String>& myreads, SharedPtr<CommG
                 bm->Add(mer.GetBytes(), TKmer::N_BYTES);
             }
         }
+
+        total_totsend += (totsend / TKmer::N_BYTES);
+        total_totrecv += (totrecv / TKmer::N_BYTES);
+
+        log() << " has sent " << total_totsend << " k-mers parsed from " << batch_state.myreadid << " reads of " << numreads << " and received " << total_totrecv << " k-mers";
+        rootlog << "Round " << batch_round++ << "\n";
+        log.Flush(rootlog);
+
     } while (!batch_state.Finished());
 
     return kmermap;
