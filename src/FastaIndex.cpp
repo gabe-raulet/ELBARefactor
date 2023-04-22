@@ -105,7 +105,7 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
 
     MPI_Exscan(&num_records, &offset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
-    maxlen = std::accumulate(records.begin(), records.end(), 0, [](size_t l, const faidx_record_t& rec) { return l > rec.len? l : rec.len; });
+    maxlen = std::accumulate(records.begin(), records.end(), 0, [](size_t l, const faidx_record_t& rec) { return std::max(l, rec.len); });
 
     char *seqbuf = new char[maxlen];
 
@@ -170,6 +170,10 @@ Vector<String> FastaIndex::GetMyReads()
     size_t myreadoffset;
     MPI_Exscan(&mynumreads, &myreadoffset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
     if (commgrid->GetRank() == 0) myreadoffset = 0;
+
+    Logger logger(commgrid);
+    logger() << std::fixed << std::setprecision(2) << " sequence range [" << myreadoffset << ".." << myreadoffset+mynumreads << "). ~" << myavglen << " nucleotides per read. (" << static_cast<double>(mytotbases) / (1024.0 * 1024.0) << " megabytes)";
+    logger.Flush("FASTA distributed among process ranks:");
 
     return reads;
 }

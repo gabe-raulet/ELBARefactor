@@ -13,6 +13,7 @@
 
 int returncode;
 String fasta_fname;
+
 /*
  * X-Drop alignment parameters.
  */
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
         auto commgrid = Grid(new CommGrid(comm, 0, 0));
         int myrank = commgrid->GetRank();
         int nprocs = commgrid->GetSize();
-        int params[5] = {mat, mis, gap, xdrop_cutoff};
+        int params[4] = {mat, mis, gap, xdrop_cutoff};
         int show_help = 0;
 
         if (myrank == root)
@@ -75,9 +76,11 @@ int main(int argc, char *argv[])
         MPI_BCAST(&fasta_provided, 1, MPI_INT, root, comm);
         if (!fasta_provided) goto err;
 
+        int fasta_fname_len;
         if (myrank == root)
         {
             fasta_fname = argv[optind];
+            fasta_fname_len = fasta_fname.size();
 
             std::cout << "-DKMER_SIZE="       << KMER_SIZE       << "\n"
                       << "-DLOWER_KMER_FREQ=" << LOWER_KMER_FREQ << "\n"
@@ -94,10 +97,32 @@ int main(int argc, char *argv[])
                       << std::endl;
         }
 
-        MPI_Barrier(comm);
+        MPI_BCAST(&fasta_fname_len, 1, MPI_INT, root, comm);
 
-        // FastaIndex index(fasta_fname, commgrid);
-        // Vector<String> myreads = index.GetMyReads();
+        if (myrank != root) fasta_fname.assign(fasta_fname_len, '\0');
+
+        MPI_BCAST(fasta_fname.data(), fasta_fname_len, MPI_CHAR, root, comm);
+
+        double elapsed, mintime, maxtime, avgtime;
+
+        MPI_Barrier(comm);
+        elapsed = MPI_Wtime();
+
+        FastaIndex index(fasta_fname, commgrid);
+        Vector<String> myreads = index.GetMyReads();
+
+        elapsed = MPI_Wtime() - elapsed;
+        MPI_REDUCE(&elapsed, &mintime, 1, MPI_DOUBLE, MPI_MIN, root, comm);
+        MPI_REDUCE(&elapsed, &maxtime, 1, MPI_DOUBLE, MPI_MAX, root, comm);
+        MPI_REDUCE(&elapsed, &avgtime, 1, MPI_DOUBLE, MPI_SUM, root, comm);
+
+        if (myrank == root)
+        {
+            avgtime /= nprocs;
+            std::cout << "elapsed time: min=" << mintime << ", max=" << maxtime << ", avg=" << avgtime << " (seconds)" << std::endl;
+        }
+
+        MPI_Barrier(comm);
 
         goto done;
     }

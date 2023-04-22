@@ -8,9 +8,8 @@ class FastaIndex
 public:
     typedef struct faidx_record { size_t len, pos, bases; } faidx_record_t;
 
-    FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid);
+    FastaIndex(const String& fasta_fname, Grid commgrid);
 
-    SharedPtr<CommGrid> getcommgrid() const { return commgrid; }
     Vector<String> GetAllReads();
     Vector<String> GetMyReads();
 
@@ -18,7 +17,7 @@ public:
     String GetFaidxFilename() const { return fasta_fname + ".fai"; }
 
 private:
-    SharedPtr<CommGrid> commgrid;
+    Grid commgrid;
     Vector<faidx_record_t> myrecords, allrecords;
     Vector<String> names;
     String fasta_fname;

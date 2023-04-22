@@ -72,6 +72,7 @@ using MPI_Displ_type = MPI_Aint;
 #define MPI_GATHER           MPI_FUNC_SELECT(MPI_Gather)
 #define MPI_GATHERV          MPI_FUNC_SELECT(MPI_Gatherv)
 #define MPI_BCAST            MPI_FUNC_SELECT(MPI_Bcast)
+#define MPI_REDUCE           MPI_FUNC_SELECT(MPI_Reduce)
 #define MPI_FILE_READ_AT_ALL MPI_FUNC_SELECT(MPI_File_read_at_all)
 
 #ifndef MPI_SIZE_T
