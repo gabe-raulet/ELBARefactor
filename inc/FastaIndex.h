@@ -10,7 +10,6 @@ public:
 
     FastaIndex(const String& fasta_fname, Grid commgrid);
 
-    Vector<String> GetAllReads();
     Vector<String> GetMyReads();
 
     String GetFastaFilename() const { return fasta_fname; }
