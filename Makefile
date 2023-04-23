@@ -26,7 +26,7 @@ endif
 
 all: elba
 
-elba: obj/main.o obj/FastaIndex.o obj/CommGrid.o obj/MPIType.o obj/Logger.o
+elba: obj/main.o obj/FastaIndex.o obj/DnaSeq.o obj/CommGrid.o obj/MPIType.o obj/Logger.o
 	@echo CXX -c -o $@ $^
 	@$(COMPILER) $(FLAGS) $(INCADD) -o $@ $^ $(MPICH_FLAGS) -lz
 
@@ -36,6 +36,7 @@ obj/%.o: src/%.cpp
 
 obj/main.o: src/main.cpp inc/common.h
 obj/FastaIndex.o: src/FastaIndex.cpp inc/FastaIndex.h
+obj/DnaSeq.o: src/DnaSeq.cpp inc/DnaSeq.h
 obj/Logger.o: src/Logger.cpp inc/Logger.h
 
 obj/CommGrid.o: $(COMBBLAS_SRC)/CommGrid.cpp $(COMBBLAS_INC)/CommGrid.h

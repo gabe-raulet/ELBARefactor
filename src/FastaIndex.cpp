@@ -72,9 +72,9 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
     MPI_Type_free(&faidx_dtype_t);
 }
 
-Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& records)
+Vector<DnaSeq> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& records)
 {
-    Vector<String> reads;
+    Vector<DnaSeq> reads;
 
     size_t num_records = records.size();
 
@@ -134,19 +134,20 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
 
     double mbspersecond = (totbases / 1048576.0) / (t1-t0);
     Logger logger(commgrid);
-    logger() << std::fixed << std::setprecision(2) << mbspersecond << " megabytes parsed per second";
+    logger() << std::fixed << std::setprecision(2) << mbspersecond << " Mbs/second";
     logger.Flush("FASTA parsing rates:");
 
     delete[] seqbuf;
     return reads;
 }
 
-Vector<String> FastaIndex::GetMyReads()
+Vector<DnaSeq> FastaIndex::GetMyReads()
 {
-    Vector<String> reads = GetReadsFromRecords(myrecords);
+    Vector<DnaSeq> myreads = GetReadsFromRecords(myrecords);
 
-    size_t mynumreads = reads.size();
+    size_t mynumreads = myreads.size();
     size_t mytotbases = std::accumulate(myrecords.begin(), myrecords.end(), static_cast<size_t>(0), [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
+    size_t mytotbytes = std::accumulate(myreads.begin(), myreads.end(), static_cast<size_t>(0), [](size_t cur, const auto& s) { return cur + s.numbytes(); });
     double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
 
     size_t myreadoffset;
@@ -154,8 +155,8 @@ Vector<String> FastaIndex::GetMyReads()
     if (commgrid->GetRank() == 0) myreadoffset = 0;
 
     Logger logger(commgrid);
-    logger() << std::fixed << std::setprecision(2) << " sequence range [" << myreadoffset << ".." << myreadoffset+mynumreads << "). ~" << myavglen << " nucleotides per read. (" << static_cast<double>(mytotbases) / (1024.0 * 1024.0) << " megabytes)";
+    logger() << std::fixed << std::setprecision(2) << " my range [" << myreadoffset << ".." << myreadoffset+mynumreads << "). ~" << myavglen << " nts/read. (" << static_cast<double>(mytotbytes) / (1024.0 * 1024.0) << " Mbs compressed)";
     logger.Flush("FASTA distributed among process ranks:");
 
-    return reads;
+    return myreads;
 }
