@@ -101,14 +101,17 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
     MPI_FILE_READ_AT_ALL(fh, startpos, mychunk.data(), mychunksize, MPI_CHAR, MPI_STATUS_IGNORE);
     MPI_File_close(&fh);
 
-    size_t maxlen, offset = 0;
+    size_t maxlen, totbases, offset = 0;
 
     MPI_Exscan(&num_records, &offset, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
 
-    maxlen = std::accumulate(records.begin(), records.end(), 0, [](size_t l, const faidx_record_t& rec) { return std::max(l, rec.len); });
+    maxlen   = std::accumulate(records.begin(), records.end(), static_cast<size_t>(0), [](size_t l, const faidx_record_t& rec) { return std::max(l, rec.len); });
+    totbases = std::accumulate(records.begin(), records.end(), static_cast<size_t>(0), [](size_t l, const faidx_record_t& rec) { return l + rec.len; });
 
     char *seqbuf = new char[maxlen];
 
+    double t0, t1;
+    t0 = MPI_Wtime();
     for (auto itr = records.cbegin(); itr != records.cend(); ++itr)
     {
         size_t locpos = 0;
@@ -127,6 +130,12 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
 
         reads.emplace_back(seqbuf, itr->len);
     }
+    t1 = MPI_Wtime();
+
+    double mbspersecond = (totbases / 1048576.0) / (t1-t0);
+    Logger logger(commgrid);
+    logger() << std::fixed << std::setprecision(2) << mbspersecond << " megabytes parsed per second";
+    logger.Flush("FASTA parsing rates:");
 
     delete[] seqbuf;
     return reads;
@@ -137,7 +146,7 @@ Vector<String> FastaIndex::GetMyReads()
     Vector<String> reads = GetReadsFromRecords(myrecords);
 
     size_t mynumreads = reads.size();
-    size_t mytotbases = std::accumulate(myrecords.begin(), myrecords.end(), 0, [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
+    size_t mytotbases = std::accumulate(myrecords.begin(), myrecords.end(), static_cast<size_t>(0), [](size_t cur, const faidx_record_t& rec) { return cur + rec.len; });
     double myavglen = static_cast<double>(mytotbases) / static_cast<double>(mynumreads);
 
     size_t myreadoffset;
