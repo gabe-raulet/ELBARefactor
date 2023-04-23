@@ -92,7 +92,8 @@ Vector<String> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
     MPI_Offset filesize;
     MPI_File_get_size(fh, &filesize);
 
-    endpos = std::max(endpos, filesize);
+    endpos = std::min(endpos, filesize);
+    // endpos = std::max(endpos, filesize);
 
     MPI_Count_type mychunksize = endpos - startpos;
 
