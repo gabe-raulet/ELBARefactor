@@ -71,10 +71,38 @@ SeqStore::SeqStore(const FastaIndex& index) : commgrid(index.getcommgrid())
     }
 
     MPI_Barrier(commgrid->GetWorld());
-
 }
 
 SeqStore::~SeqStore()
 {
     delete[] buf;
+}
+
+size_t SeqStore::GetNumReads() const
+{
+    size_t mynumreads = GetMyNumReads();
+    MPI_Allreduce(MPI_IN_PLACE, &mynumreads, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+    return mynumreads;
+}
+
+Vector<size_t> SeqStore::GetGlobalReadCounts() const
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    MPI_Comm comm = commgrid->GetWorld();
+
+    Vector<size_t> counts(nprocs);
+    counts[myrank] = GetMyNumReads();
+
+    MPI_Allgather(MPI_IN_PLACE, 1, MPI_SIZE_T, counts.data(), 1, MPI_SIZE_T, comm);
+
+    return counts;
+}
+
+Vector<size_t> SeqStore::GetGlobalReadOffsets() const
+{
+    Vector<size_t> counts = GetGlobalReadCounts();
+    Vector<size_t> readoffsets(counts.size());
+    std::exclusive_scan(counts.begin(), counts.end(), readoffsets.begin(), static_cast<size_t>(0));
+    return readoffsets;
 }

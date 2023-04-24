@@ -11,7 +11,10 @@ public:
     ~SeqStore();
 
     char const* GetSequence(size_t id) const { return buf + offsets[id]; }
-    size_t NumReads() const { return offsets.size(); }
+    size_t GetMyNumReads() const { return offsets.size(); }
+    size_t GetNumReads() const;
+    Vector<size_t> GetGlobalReadCounts() const;
+    Vector<size_t> GetGlobalReadOffsets() const;
 
 private:
     Grid commgrid;
