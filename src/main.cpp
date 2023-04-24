@@ -70,14 +70,14 @@ int main(int argc, char *argv[])
          * Start pipeline
          */
 
-        FastaIndex index(fasta_fname, commgrid);
+        FastaIndex index(fasta_fname, commgrid, true);
 
-        SeqStore store(index);
+        Vector<DnaSeq> myreads = index.GetMyReads();
+        // SeqStore store(index);
 
         /*
          * Finish pipeline
          */
-
 
         elapsed = MPI_Wtime() - elapsed;
         MPI_REDUCE(&elapsed, &mintime, 1, MPI_DOUBLE, MPI_MIN, root, comm);

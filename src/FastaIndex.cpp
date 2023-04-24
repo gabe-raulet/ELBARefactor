@@ -24,7 +24,6 @@ MPI_Count_type FastaIndex::get_idbalanced_partition(Vector<MPI_Count_type>& send
     int myrank = commgrid->GetRank();
     int nprocs = commgrid->GetSize();
     size_t numreads = GetNumRecords();
-
     sendcounts.resize(nprocs);
 
     MPI_Count_type readsperproc = numreads / nprocs;
@@ -38,7 +37,34 @@ MPI_Count_type FastaIndex::get_idbalanced_partition(Vector<MPI_Count_type>& send
 
 MPI_Count_type FastaIndex::get_membalanced_partition(Vector<MPI_Count_type>& sendcounts)
 {
-    return get_idbalanced_partition(sendcounts);
+    int nprocs = commgrid->GetSize();
+    int myrank = commgrid->GetRank();
+    size_t numreads = GetNumRecords();
+    sendcounts.resize(nprocs);
+
+    size_t totbases = std::accumulate(records.begin(), records.end(), static_cast<size_t>(0), [](size_t sum, const auto& record) { return sum + record.len; });
+    double avgbasesperproc = static_cast<double>(totbases) / nprocs;
+
+    size_t readid = 0;
+
+    for (int i = 0; i < nprocs; ++i)
+    {
+        size_t basessofar = 0;
+        size_t startid = readid;
+
+        while (readid < numreads && basessofar + records[readid].len < avgbasesperproc)
+        {
+            basessofar += records[readid].len;
+            readid++;
+        }
+
+        size_t readssofar = readid - startid;
+        assert(readssofar >= 1);
+
+        sendcounts[i] = readssofar;
+    }
+
+    return numreads;
 }
 
 FastaIndex::FastaIndex(const String& fasta_fname, Grid commgrid, bool membalanced) : commgrid(commgrid), fasta_fname(fasta_fname)
@@ -149,7 +175,7 @@ Vector<DnaSeq> FastaIndex::GetReadsFromRecords(const Vector<faidx_record_t>& rec
     double mbspersecond = (totbases / 1048576.0) / (t1-t0);
     Logger logger(commgrid);
     logger() << std::fixed << std::setprecision(2) << mbspersecond << " Mbs/second";
-    logger.Flush("FASTA parsing rates:");
+    logger.Flush("FASTA parsing rates (FastaIndex):");
 
     delete[] seqbuf;
     return reads;
@@ -169,8 +195,8 @@ Vector<DnaSeq> FastaIndex::GetMyReads()
     if (commgrid->GetRank() == 0) myreadoffset = 0;
 
     Logger logger(commgrid);
-    logger() << std::fixed << std::setprecision(2) << " my range [" << myreadoffset << ".." << myreadoffset+mynumreads << "). ~" << myavglen << " nts/read. (" << static_cast<double>(mytotbytes) / (1024.0 * 1024.0) << " Mbs compressed)";
-    logger.Flush("FASTA distributed among process ranks:");
+    logger() << std::fixed << std::setprecision(2) << " my range [" << myreadoffset << ".." << myreadoffset+mynumreads << ") (" << mynumreads << " reads). ~" << myavglen << " nts/read. (" << static_cast<double>(mytotbytes) / (1024.0 * 1024.0) << " Mbs compressed)";
+    logger.Flush("FASTA distributed among process ranks (FastaIndex):");
 
     return myreads;
 }
