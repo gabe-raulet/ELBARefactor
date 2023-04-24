@@ -10,6 +10,7 @@
 #include "common.h"
 #include "compiletime.h"
 #include "FastaIndex.h"
+#include "SeqStore.h"
 #include "DnaSeq.h"
 #include "Logger.h"
 
@@ -65,8 +66,18 @@ int main(int argc, char *argv[])
         MPI_Barrier(comm);
         elapsed = MPI_Wtime();
 
+        /*
+         * Start pipeline
+         */
+
         FastaIndex index(fasta_fname, commgrid);
-        Vector<DnaSeq> myreads = index.GetMyReads();
+
+        SeqStore store(index);
+
+        /*
+         * Finish pipeline
+         */
+
 
         elapsed = MPI_Wtime() - elapsed;
         MPI_REDUCE(&elapsed, &mintime, 1, MPI_DOUBLE, MPI_MIN, root, comm);

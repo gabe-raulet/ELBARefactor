@@ -1,12 +1,15 @@
 #include "SeqStore.h"
+#include "Logger.h"
+#include <cstring>
+#include <cassert>
 
 SeqStore::SeqStore(const FastaIndex& index) : commgrid(index.getcommgrid())
 {
     auto myrecords = index.getmyrecords();
     size_t mynumrecords = myrecords.size();
 
-    readlens.resize(mynumrecords);
-    std::transform(myrecords.cbegin(), myrecords.cend(), readlens.begin(), [](const auto& record) { return record.len; });
+    offsets.reserve(mynumrecords);
+    readlens.reserve(mynumrecords);
 
     const auto& first_record = myrecords.front();
     const auto& last_record = myrecords.back();
@@ -23,8 +26,55 @@ SeqStore::SeqStore(const FastaIndex& index) : commgrid(index.getcommgrid())
     if (endpos > filesize) endpos = filesize;
 
     MPI_Offset mybufsize = endpos - startpos;
-    buf.resize(mybufsize);
 
-    MPI_FILE_READ_AT_ALL(fh, startpos, buf.data(), mybufsize, MPI_CHAR, MPI_STATUS_IGNORE);
-    MPI_File_close(&fh);
+    buf = new char[mybufsize];
+
+    MPI_FILE_READ_AT_ALL(fh, startpos, buf, mybufsize, MPI_CHAR, MPI_STATUS_IGNORE);
+
+    MPI_File_close(&fh); /* implicit barrier */
+    double elapsed = MPI_Wtime();
+
+    char *rptr;
+    char *wptr;
+
+    for (auto itr = myrecords.cbegin(); itr != myrecords.cend(); ++itr)
+    {
+        readlens.push_back(itr->len);
+        offsets.push_back(itr->pos - startpos); /* itr->pos is global file offset. subtract local process file start position to get my offset */
+
+        wptr = rptr = buf + offsets.back();
+
+        for (size_t i = 0; i < itr->len; ++i)
+        {
+            *wptr++ = DnaSeq::getcharchar(*rptr++);
+
+            if ((i+1) % itr->bases == 0) /* '\n' character ever itr->bases. increment read pointer */
+                rptr++;
+        }
+
+        *wptr = '\0';
+
+        assert(strlen(buf + offsets.back()) == itr->len);
+    }
+
+    elapsed = MPI_Wtime() - elapsed;
+
+    double worktime, spantime, costtime;
+    MPI_Reduce(&elapsed, &worktime, 1, MPI_DOUBLE, MPI_SUM, 0, commgrid->GetWorld());
+    MPI_Reduce(&elapsed, &spantime, 1, MPI_DOUBLE, MPI_MAX, 0, commgrid->GetWorld());
+
+    costtime = spantime * commgrid->GetSize();
+
+    if (commgrid->GetRank() == 0)
+    {
+        std::cout << std::fixed << std::setprecision(3) << "[" << worktime << ", " << costtime << ", " << spantime << "] [work, cost, span] (processor seconds)" << std::endl;
+    }
+
+    MPI_Barrier(commgrid->GetWorld());
+
+}
+
+SeqStore::~SeqStore()
+{
+    delete[] buf;
 }

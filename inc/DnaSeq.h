@@ -35,6 +35,7 @@ public:
 
     static char    getcodechar(int c)  { return chartab[c]; }
     static uint8_t getcharcode(char c) { return codetab[(int)c]; }
+    static char    getcharchar(char c) { return getcodechar(getcharcode(c)); }
 
     friend std::ostream& operator<<(std::ostream& stream, const DnaSeq& s)
     {
@@ -46,7 +47,7 @@ private:
     std::vector<uint64_t> words; /* each word encodes up to 32 nucleotides */
     int remain;                  /* number of nucleotides in last word */
 
-    static constexpr char chartab[4] = {'A', 'C', 'G', 'T'};
+    static constexpr char chartab[4+1] = {'A', 'C', 'G', 'T', '?'};
     static constexpr uint8_t codetab[256] =
     {
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
