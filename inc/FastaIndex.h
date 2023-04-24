@@ -17,8 +17,6 @@ public:
 
     const Vector<faidx_record_t>& getmyrecords() const { return myrecords; }
 
-    Vector<DnaSeq> GetMyReads();
-
     String GetFastaFilename() const { return fasta_fname; }
     String GetFaidxFilename() const { return fasta_fname + ".fai"; }
 
@@ -27,8 +25,6 @@ private:
     Vector<faidx_record_t> myrecords, records;
     Vector<String> names;
     String fasta_fname;
-
-    Vector<DnaSeq> GetReadsFromRecords(const Vector<faidx_record_t>& records);
 
     MPI_Count_type get_idbalanced_partition(Vector<MPI_Count_type>& sendcounts);
     MPI_Count_type get_membalanced_partition(Vector<MPI_Count_type>& sendcounts);

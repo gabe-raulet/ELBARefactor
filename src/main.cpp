@@ -10,6 +10,7 @@
 #include "common.h"
 #include "compiletime.h"
 #include "FastaIndex.h"
+#include "FastaData.h"
 #include "SeqStore.h"
 #include "DnaSeq.h"
 #include "Logger.h"
@@ -71,23 +72,23 @@ int main(int argc, char *argv[])
          */
 
         FastaIndex index(fasta_fname, commgrid, true);
-
-        Vector<DnaSeq> myreads = index.GetMyReads();
-        // SeqStore store(index);
+        FastaData lfd(index);
+        // DistributedFastaData dfd(lfd);
 
         /*
          * Finish pipeline
          */
 
         elapsed = MPI_Wtime() - elapsed;
-        MPI_REDUCE(&elapsed, &mintime, 1, MPI_DOUBLE, MPI_MIN, root, comm);
         MPI_REDUCE(&elapsed, &maxtime, 1, MPI_DOUBLE, MPI_MAX, root, comm);
         MPI_REDUCE(&elapsed, &avgtime, 1, MPI_DOUBLE, MPI_SUM, root, comm);
 
         if (myrank == root)
         {
-            avgtime /= nprocs;
-            std::cout << "elapsed time: min=" << mintime << ", max=" << maxtime << ", avg=" << avgtime << " (seconds)" << std::endl;
+            std::cout << "Total time (user secs): " << std::fixed << std::setprecision(3) << elapsed << "\n"
+                      << "Total work (proc secs): " << std::fixed << std::setprecision(3) << avgtime << "\n"
+                      << "Total cost (proc secs): " << std::fixed << std::setprecision(3) << (elapsed*nprocs) << std::endl;
+
         }
 
         MPI_Barrier(comm);
