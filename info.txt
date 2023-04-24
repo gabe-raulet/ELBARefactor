@@ -2,7 +2,7 @@ constant across all ranks:
 pr=3
 pc=3
 avg_l_seq_count=25
-avg_grid_seq_coun=75
+avg_grid_seq_count=75
 
 myrank=0
 grid_row_id=0

@@ -1,0 +1,11 @@
+start and end offsets
+
+buffer.rank0.txt: #	0	381373
+buffer.rank1.txt: #	10670	374701
+buffer.rank2.txt: #	3710	375069
+buffer.rank3.txt: #	4202	372792
+buffer.rank4.txt: #	1880	379421
+buffer.rank5.txt: #	8657	375094
+buffer.rank6.txt: #	4146	372353
+buffer.rank7.txt: #	1434	371794
+buffer.rank8.txt: #	908	370895
