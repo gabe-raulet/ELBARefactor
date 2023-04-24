@@ -19,7 +19,29 @@ faidx_record_t GetFaidxRecord(const String& line, Vector<String>& names)
     return record;
 }
 
-FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) : commgrid(commgrid), fasta_fname(fasta_fname)
+MPI_Count_type FastaIndex::get_idbalanced_partition(Vector<MPI_Count_type>& sendcounts)
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    size_t numreads = GetNumRecords();
+
+    sendcounts.resize(nprocs);
+
+    MPI_Count_type readsperproc = numreads / nprocs;
+
+    std::fill_n(sendcounts.begin(), nprocs-1, readsperproc);
+
+    sendcounts.back() = numreads - (nprocs-1) * readsperproc;
+
+    return numreads;
+}
+
+MPI_Count_type FastaIndex::get_membalanced_partition(Vector<MPI_Count_type>& sendcounts)
+{
+    return get_idbalanced_partition(sendcounts);
+}
+
+FastaIndex::FastaIndex(const String& fasta_fname, Grid commgrid, bool membalanced) : commgrid(commgrid), fasta_fname(fasta_fname)
 {
     int nprocs = commgrid->GetSize();
     int myrank = commgrid->GetRank();
@@ -37,25 +59,17 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
 
         while (std::getline(filestream, line))
         {
-            allrecords.push_back(GetFaidxRecord(line, root_names));
+            records.push_back(GetFaidxRecord(line, root_names));
         }
 
         filestream.close();
 
-        MPI_Count_type num_records = allrecords.size();
+        MPI_Count_type num_records;
 
-        sendcounts.resize(nprocs);
+        num_records = membalanced? get_membalanced_partition(sendcounts) : get_idbalanced_partition(sendcounts);
+
         displs.resize(nprocs);
-
-        displs.front() = 0;
-
-        MPI_Count_type records_per_proc = num_records / nprocs;
-
-        std::fill_n(sendcounts.begin(), nprocs-1, records_per_proc);
-
-        sendcounts.back() = num_records - (nprocs-1) * records_per_proc;
-
-        std::partial_sum(sendcounts.begin(), sendcounts.end()-1, displs.begin()+1);
+        std::exclusive_scan(sendcounts.begin(), sendcounts.end(), displs.begin(), static_cast<MPI_Displ_type>(0));
     }
 
     /*
@@ -68,7 +82,7 @@ FastaIndex::FastaIndex(const String& fasta_fname, SharedPtr<CommGrid> commgrid) 
     MPI_Datatype faidx_dtype_t;
     MPI_Type_contiguous(3, MPI_SIZE_T, &faidx_dtype_t);
     MPI_Type_commit(&faidx_dtype_t);
-    MPI_SCATTERV(allrecords.data(), sendcounts.data(), displs.data(), faidx_dtype_t, myrecords.data(), recvcount, faidx_dtype_t, 0, commgrid->GetWorld());
+    MPI_SCATTERV(records.data(), sendcounts.data(), displs.data(), faidx_dtype_t, myrecords.data(), recvcount, faidx_dtype_t, 0, commgrid->GetWorld());
     MPI_Type_free(&faidx_dtype_t);
 }
 
