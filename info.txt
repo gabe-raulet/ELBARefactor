@@ -1,0 +1,364 @@
+constant across all ranks:
+pr=3
+pc=3
+avg_l_seq_count=25
+avg_grid_seq_coun=75
+
+myrank=0
+grid_row_id=0
+grid_col_id=0
+row_seq_start_idx=0
+row_seq_end_idx=74
+col_seq_start_idx=0
+col_seq_end_idx=74
+
+myrank=1
+grid_row_id=0
+grid_col_id=1
+row_seq_start_idx=0
+row_seq_end_idx=74
+col_seq_start_idx=75
+col_seq_end_idx=149
+
+myrank=2
+grid_row_id=0
+grid_col_id=2
+row_seq_start_idx=0
+row_seq_end_idx=74
+col_seq_start_idx=150
+col_seq_end_idx=226
+
+myrank=3
+grid_row_id=1
+grid_col_id=0
+row_seq_start_idx=75
+row_seq_end_idx=149
+col_seq_start_idx=0
+col_seq_end_idx=74
+
+myrank=4
+grid_row_id=1
+grid_col_id=1
+row_seq_start_idx=75
+row_seq_end_idx=149
+col_seq_start_idx=75
+col_seq_end_idx=149
+
+myrank=5
+grid_row_id=1
+grid_col_id=2
+row_seq_start_idx=75
+row_seq_end_idx=149
+col_seq_start_idx=150
+col_seq_end_idx=226
+
+myrank=6
+grid_row_id=2
+grid_col_id=0
+row_seq_start_idx=150
+row_seq_end_idx=226
+col_seq_start_idx=0
+col_seq_end_idx=74
+
+myrank=7
+grid_row_id=2
+grid_col_id=1
+row_seq_start_idx=150
+row_seq_end_idx=226
+col_seq_start_idx=75
+col_seq_end_idx=149
+
+myrank=8
+grid_row_id=2
+grid_col_id=2
+row_seq_start_idx=150
+row_seq_end_idx=226
+col_seq_start_idx=150
+col_seq_end_idx=226
+
+Rank: 0 - l_seq_count
+26
+
+Rank: 1 - l_seq_count
+25
+
+Rank: 2 - l_seq_count
+25
+
+Rank: 3 - l_seq_count
+25
+
+Rank: 4 - l_seq_count
+26
+
+Rank: 5 - l_seq_count
+25
+
+Rank: 6 - l_seq_count
+25
+
+Rank: 7 - l_seq_count
+25
+
+Rank: 8 - l_seq_count
+25
+Rank: 0 orig_l_seq_count: 26
+
+Rank: 0 - My neighbors
+ (rc_flag: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+
+Rank: 1 orig_l_seq_count: 25
+
+Rank: 1 - My neighbors
+ (rc_flag: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+
+Rank: 2 orig_l_seq_count: 25
+
+Rank: 2 - My neighbors
+ (rc_flag: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+
+Rank: 3 orig_l_seq_count: 25
+
+Rank: 3 - My neighbors
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+ (rc_flag: 0, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 0, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+
+Rank: 4 orig_l_seq_count: 26
+
+Rank: 4 - My neighbors
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+
+Rank: 5 orig_l_seq_count: 25
+
+Rank: 5 - My neighbors
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+
+Rank: 6 orig_l_seq_count: 25
+
+Rank: 6 - My neighbors
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 0, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+
+Rank: 7 orig_l_seq_count: 25
+
+Rank: 7 - My neighbors
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 0, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+
+Rank: 8 orig_l_seq_count: 25
+
+Rank: 8 - My neighbors
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+ (rc_flag: 1, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+
+
+Rank: 0 - All neighbor counts and displacements at the root
+(rank: 0 count: 3 displ:0)
+(rank: 1 count: 7 displ:3)
+(rank: 2 count: 7 displ:10)
+(rank: 3 count: 7 displ:17)
+(rank: 4 count: 4 displ:24)
+(rank: 5 count: 8 displ:28)
+(rank: 6 count: 7 displ:36)
+(rank: 7 count: 8 displ:43)
+(rank: 8 count: 4 displ:51)
+
+
+Rank: 0 - Allgathered neighbors at the root
+rank: 0 (rc_flag: 1, owner_rank: 0, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 0 (rc_flag: 1, owner_rank: 0, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 0 (rc_flag: 1, owner_rank: 0, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+rank: 1 (rc_flag: 1, owner_rank: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 1 (rc_flag: 1, owner_rank: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 1 (rc_flag: 1, owner_rank: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+rank: 1 (rc_flag: 0, owner_rank: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+rank: 1 (rc_flag: 0, owner_rank: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 1 (rc_flag: 0, owner_rank: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 1 (rc_flag: 0, owner_rank: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+rank: 2 (rc_flag: 1, owner_rank: 2, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 2 (rc_flag: 1, owner_rank: 2, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 2 (rc_flag: 1, owner_rank: 2, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+rank: 2 (rc_flag: 0, owner_rank: 2, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+rank: 2 (rc_flag: 0, owner_rank: 2, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 2 (rc_flag: 0, owner_rank: 2, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 2 (rc_flag: 0, owner_rank: 2, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 3 (rc_flag: 1, owner_rank: 3, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+rank: 3 (rc_flag: 1, owner_rank: 3, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 3 (rc_flag: 1, owner_rank: 3, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 3 (rc_flag: 1, owner_rank: 3, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+rank: 3 (rc_flag: 0, owner_rank: 3, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 3 (rc_flag: 0, owner_rank: 3, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 3 (rc_flag: 0, owner_rank: 3, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+rank: 4 (rc_flag: 1, owner_rank: 4, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+rank: 4 (rc_flag: 1, owner_rank: 4, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 4 (rc_flag: 1, owner_rank: 4, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 4 (rc_flag: 1, owner_rank: 4, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+rank: 5 (rc_flag: 1, owner_rank: 5, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+rank: 5 (rc_flag: 1, owner_rank: 5, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 5 (rc_flag: 1, owner_rank: 5, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 5 (rc_flag: 1, owner_rank: 5, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+rank: 5 (rc_flag: 0, owner_rank: 5, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+rank: 5 (rc_flag: 0, owner_rank: 5, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 5 (rc_flag: 0, owner_rank: 5, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 5 (rc_flag: 0, owner_rank: 5, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 1, owner_rank: 6, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 1, owner_rank: 6, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 1, owner_rank: 6, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 1, owner_rank: 6, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 0, owner_rank: 6, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 6 (rc_flag: 0, owner_rank: 6, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 6 (rc_flag: 0, owner_rank: 6, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23)
+rank: 7 (rc_flag: 1, owner_rank: 7, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 1, owner_rank: 7, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 1, owner_rank: 7, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 1, owner_rank: 7, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 0, owner_rank: 7, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 0, owner_rank: 7, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 7 (rc_flag: 0, owner_rank: 7, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25)
+rank: 7 (rc_flag: 0, owner_rank: 7, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22)
+rank: 8 (rc_flag: 1, owner_rank: 8, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24)
+rank: 8 (rc_flag: 1, owner_rank: 8, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 8 (rc_flag: 1, owner_rank: 8, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+rank: 8 (rc_flag: 1, owner_rank: 8, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24)
+
+
+Rank: 0 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 364032)
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23, nbr buff length: 357874)
+
+
+Rank: 1 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 381374)
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23, nbr buff length: 357874)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24, nbr buff length: 13485)
+ (rc_flag: 0, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368591)
+ (rc_flag: 0, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 377542)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22, nbr buff length: 337148)
+
+
+Rank: 2 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 381374)
+ (rc_flag: 1, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 364032)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24, nbr buff length: 29289)
+ (rc_flag: 0, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368208)
+ (rc_flag: 0, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 370361)
+ (rc_flag: 0, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 369988)
+
+
+Rank: 3 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24, nbr buff length: 13485)
+ (rc_flag: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 377542)
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22, nbr buff length: 337148)
+ (rc_flag: 0, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 381374)
+ (rc_flag: 0, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 364032)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23, nbr buff length: 357874)
+
+
+Rank: 4 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24, nbr buff length: 13485)
+ (rc_flag: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368591)
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22, nbr buff length: 337148)
+
+
+Rank: 5 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24, nbr buff length: 13485)
+ (rc_flag: 1, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368591)
+ (rc_flag: 1, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 377542)
+ (rc_flag: 0, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368208)
+ (rc_flag: 0, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 370361)
+ (rc_flag: 0, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 369988)
+
+
+Rank: 6 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24, nbr buff length: 29289)
+ (rc_flag: 1, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 370361)
+ (rc_flag: 1, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 369988)
+ (rc_flag: 0, nbr_rank: 0, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 381374)
+ (rc_flag: 0, nbr_rank: 1, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 364032)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 0, nbr_seq_end_idx: 23, nbr buff length: 357874)
+
+
+Rank: 7 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24, nbr buff length: 29289)
+ (rc_flag: 1, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368208)
+ (rc_flag: 1, nbr_rank: 8, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 369988)
+ (rc_flag: 0, nbr_rank: 2, nbr_seq_start_idx: 24, nbr_seq_end_idx: 24, nbr buff length: 13485)
+ (rc_flag: 0, nbr_rank: 3, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368591)
+ (rc_flag: 0, nbr_rank: 4, nbr_seq_start_idx: 0, nbr_seq_end_idx: 25, nbr buff length: 377542)
+ (rc_flag: 0, nbr_rank: 5, nbr_seq_start_idx: 0, nbr_seq_end_idx: 22, nbr buff length: 337148)
+
+
+Rank: 8 - My recv neighbors (excludes me) buff lengths
+ (rc_flag: 1, nbr_rank: 5, nbr_seq_start_idx: 23, nbr_seq_end_idx: 24, nbr buff length: 29289)
+ (rc_flag: 1, nbr_rank: 6, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 368208)
+ (rc_flag: 1, nbr_rank: 7, nbr_seq_start_idx: 0, nbr_seq_end_idx: 24, nbr buff length: 370361)
+
+
+Rank: 0 - recv_nbrs and to_nbrs count
+(rnc: 2 tnc: 4)
+
+Rank: 1 - recv_nbrs and to_nbrs count
+(rnc: 6 tnc: 4)
+
+Rank: 2 - recv_nbrs and to_nbrs count
+(rnc: 6 tnc: 9)
+
+Rank: 3 - recv_nbrs and to_nbrs count
+(rnc: 6 tnc: 4)
+
+Rank: 4 - recv_nbrs and to_nbrs count
+(rnc: 3 tnc: 4)
+
+Rank: 5 - recv_nbrs and to_nbrs count
+(rnc: 6 tnc: 8)
+
+Rank: 6 - recv_nbrs and to_nbrs count
+(rnc: 6 tnc: 4)
+
+Rank: 7 - recv_nbrs and to_nbrs count
+(rnc: 7 tnc: 4)
+
+Rank: 8 - recv_nbrs and to_nbrs count
+(rnc: 3 tnc: 4)
