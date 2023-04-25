@@ -16,6 +16,7 @@ public:
     FastaData getrange(size_t pos, size_t count) const;
     FastaData& operator+=(const FastaData& rhs);
     String getsequence(size_t localid) const;
+    Grid getcommgrid() const { return commgrid; }
 
     ~FastaData() { delete[] buf; }
 
@@ -28,18 +29,19 @@ private:
     size_t bufsize;
 };
 
-// class DistributedFastaData
-// {
-// public:
-    // DistributedFastaData(const FastaData& localdata);
+class DistributedFastaData
+{
+public:
+    DistributedFastaData(const FastaData& localdata);
 
-    // FastaData CollectRowReads(size_t& firstrowid) const;
-    // FastaData CollectColReads(size_t& firstcolid) const;
+    FastaData CollectRowReads() const;
+    FastaData CollectColReads() const;
 
-// private:
-    // Grid commgrid;
-    // FastaData localdata;
-// };
+private:
+    Grid commgrid;
+    FastaData localdata;
+    Vector<size_t> idoffsets;
+};
 
 
 #endif

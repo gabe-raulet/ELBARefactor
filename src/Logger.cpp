@@ -77,7 +77,10 @@ void Logger::Flush(char const *label)
 
     if (!myrank)
     {
-        std::cout << label << "\n";
+        std::string slabel(label);
+        std::string banner;
+        banner.assign(slabel.size(), '=');
+        std::cout << slabel << "\n" << banner << "\n" << std::endl;
 
         char const *buf = recvbuf.data();
 

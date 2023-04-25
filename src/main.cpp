@@ -72,8 +72,10 @@ int main(int argc, char *argv[])
          */
 
         FastaIndex index(fasta_fname, commgrid, true);
+        // FastaIndex index(fasta_fname, commgrid, false);
         FastaData lfd(index);
-        // DistributedFastaData dfd(lfd);
+        DistributedFastaData dfd(lfd);
+        dfd.CollectRowReads();
 
         /*
          * Finish pipeline

@@ -113,6 +113,7 @@ FastaData::FastaData(const FastaIndex& index) : commgrid(index.getcommgrid())
     delete[] readbuf;
 
     MPI_Exscan(&numreads, &firstid, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+    if (commgrid->GetRank() == 0) firstid = 0;
 
     double avglen = static_cast<double>(totbases) / static_cast<double>(numreads);
 
@@ -196,4 +197,45 @@ FastaData& FastaData::operator+=(const FastaData& rhs)
     return *this;
 }
 
-// DistributedFastaData::DistributedFastaData(const FastaData& localdata) : commgrid(localdata.getcommgrid()), localdata(localdata) {}
+DistributedFastaData::DistributedFastaData(const FastaData& localdata) : commgrid(localdata.getcommgrid()), localdata(localdata)
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    MPI_Comm comm = commgrid->GetWorld();
+
+    idoffsets.resize(nprocs);
+    idoffsets[myrank] = localdata.getfirstid();
+
+    MPI_Allgather(MPI_IN_PLACE, 1, MPI_SIZE_T, idoffsets.data(), 1, MPI_SIZE_T, comm);
+}
+
+FastaData DistributedFastaData::CollectRowReads() const
+{
+    int myrank = commgrid->GetRank();
+    int nprocs = commgrid->GetSize();
+    int myrowid = commgrid->GetRankInProcCol();
+    int mycolid = commgrid->GetRankInProcRow();
+    int numgridrows = commgrid->GetGridRows();
+
+    size_t numreads = localdata.numreads();
+    MPI_Allreduce(MPI_IN_PLACE, &numreads, 1, MPI_SIZE_T, MPI_SUM, commgrid->GetWorld());
+
+    assert(commgrid->GetGridRows() == commgrid->GetGridCols());
+
+    size_t readspergridrow = numreads / numgridrows;
+    size_t rowstartid = myrowid * readspergridrow;
+    size_t colstartid = mycolid * readspergridrow;
+    size_t rowendid = ((myrowid == numgridrows-1)? numreads : rowstartid + readspergridrow) - 1;
+    size_t colendid = ((mycolid == numgridrows-1)? numreads : colstartid + readspergridrow) - 1;
+
+    Logger logger(commgrid);
+    logger() << std::fixed << std::setprecision(2) << "row range ["    << rowstartid << ".." << rowendid << "] (" << (rowendid-rowstartid+1) << " reads). "
+                                                   << "column range [" << colstartid << ".." << colendid << "] (" << (colendid-colstartid+1) << " reads). ";
+    logger.Flush("Sequence grid distribution:");
+
+    auto startitr = std::lower_bound(idoffsets.begin(), idoffsets.end(), rowstartid);
+    auto enditr = std::lower_bound(startitr, idoffsets.end(), rowendid);
+
+
+    return localdata;
+}
